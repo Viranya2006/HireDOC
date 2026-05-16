@@ -2,6 +2,7 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface AISummary {
   overall_score: number;
+  grade?: string;
   matching_skills: string[];
   missing_skills: string[];
   experience_match: string;
@@ -9,7 +10,9 @@ export interface AISummary {
   red_flags: string[];
   recruiter_summary: string;
   suggested_interview_questions: string[];
-  recommendation: string;
+  recommendation: "strong_yes" | "yes" | "maybe" | "no";
+  model_evidence?: unknown;
+  fit_breakdown?: unknown;
 }
 
 export type RecruiterStatus = "shortlisted" | "rejected";

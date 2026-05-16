@@ -1,6 +1,10 @@
 import axios from "axios";
 import { getMinimaxConfig } from "../config/env";
 import type { AIRequirements } from "../models/Job";
+import type {
+  CandidateModelEvidence,
+  Recommendation,
+} from "./scoringService";
 
 const MINIMAX_BASE_URL =
   process.env.MINIMAX_API_BASE_URL?.trim() || "https://api.minimax.io/v1";
@@ -281,7 +285,6 @@ ${jobDescription}`;
 }
 
 export interface CandidateEvaluation {
-  overall_score: number;
   matching_skills: string[];
   missing_skills: string[];
   experience_match: string;
@@ -289,7 +292,53 @@ export interface CandidateEvaluation {
   red_flags: string[];
   recruiter_summary: string;
   suggested_interview_questions: string[];
-  recommendation: string;
+  recommendation: Recommendation;
+  model_evidence: CandidateModelEvidence;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
+}
+
+function stringValue(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeRecommendation(value: unknown): Recommendation {
+  return value === "strong_yes" ||
+    value === "yes" ||
+    value === "maybe" ||
+    value === "no"
+    ? value
+    : "maybe";
+}
+
+function normalizeCandidateEvaluation(value: unknown): CandidateEvaluation {
+  const root = asRecord(value);
+  return {
+    matching_skills: stringArray(root.matching_skills),
+    missing_skills: stringArray(root.missing_skills),
+    experience_match: stringValue(root.experience_match),
+    answer_quality: stringValue(root.answer_quality),
+    red_flags: stringArray(root.red_flags),
+    recruiter_summary: stringValue(root.recruiter_summary),
+    suggested_interview_questions: stringArray(
+      root.suggested_interview_questions,
+    ),
+    recommendation: normalizeRecommendation(root.recommendation),
+    model_evidence: asRecord(root.model_evidence) as CandidateModelEvidence,
+  };
 }
 
 export async function evaluateCandidate(
@@ -304,9 +353,11 @@ export async function evaluateCandidate(
 
   const prompt = `Compare this candidate's CV and screening answers against the job description.
 Return ONLY a valid JSON object with no extra text or markdown.
+Do NOT create or return an overall fit score. The backend will calculate the final score.
+Return counts and section evidence only. Keep all numeric scores within 0 to 100.
+
 Return this exact structure:
 {
-  "overall_score": 85,
   "matching_skills": ["skill1", "skill2"],
   "missing_skills": ["skill1"],
   "experience_match": "Strong match - 4 years in relevant field",
@@ -314,8 +365,60 @@ Return this exact structure:
   "red_flags": ["concern1"],
   "recruiter_summary": "2-3 sentence summary for the recruiter",
   "suggested_interview_questions": ["question1", "question2", "question3"],
-  "recommendation": "strong_yes|yes|maybe|no"
+  "recommendation": "strong_yes|yes|maybe|no",
+  "model_evidence": {
+    "skills": {
+      "required": {
+        "matched_count": 0,
+        "total_count": 0,
+        "matched": ["skill from JD also found in CV"],
+        "missing": ["required skill from JD not found in CV"]
+      },
+      "nice_to_have": {
+        "matched_count": 0,
+        "total_count": 0,
+        "matched": ["nice-to-have skill from JD also found in CV"],
+        "missing": ["nice-to-have skill from JD not found in CV"]
+      }
+    },
+    "experience": {
+      "active": true,
+      "score": 0,
+      "reason": "Short explanation of relevant experience match"
+    },
+    "education": {
+      "active": true,
+      "score": 0,
+      "reason": "Short explanation of education match"
+    },
+    "projects": {
+      "active": true,
+      "score": 0,
+      "matched_count": 0,
+      "total_count": 0,
+      "matched": ["matched project/tool evidence"],
+      "missing": ["missing project/tool requirement"]
+    },
+    "job_title": {
+      "active": true,
+      "score": 0,
+      "reason": "Short explanation of title match"
+    },
+    "certifications": {
+      "matched_count": 0,
+      "total_count": 0,
+      "matched": ["matched certification"],
+      "missing": ["missing certification"]
+    }
+  }
 }
+
+Rules:
+- For skills, extract required and nice-to-have skills from the job description, then compare them against the CV. required.total_count + nice_to_have.total_count should equal the JD skills you evaluated.
+- matched_count must never be greater than total_count.
+- For non-skill sections, set active=false when the job description does not ask for that section. Example: education.active=false if no education requirement is stated.
+- For non-skill active sections, score is the section match only, not a weighted final score.
+- Use screening answers only as supporting evidence for experience, project, and skill claims. Do not count unsupported claims as strongly as CV evidence.
 
 Job Description:
 ${jobDescription}
@@ -327,5 +430,5 @@ Screening Answers:
 ${formattedAnswers}`;
 
   const raw = await callMiniMax(prompt);
-  return parseMiniMaxJson<CandidateEvaluation>(raw);
+  return normalizeCandidateEvaluation(parseMiniMaxJson<unknown>(raw));
 }
