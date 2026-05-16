@@ -5,7 +5,7 @@ import { Application } from "../models/Application";
 import { extractTextFromPDF } from "../services/cvParserService";
 import { evaluateCandidate } from "../services/minimaxService";
 import {
-  getGridFsCvJobId,
+  getCvJobId,
   openCvReadStream,
   saveCv,
 } from "../services/cvStorageService";
@@ -13,6 +13,15 @@ import { sendDecisionEmail } from "../services/emailService";
 import type { RecruiterStatus } from "../models/Application";
 
 export const submitApplication = async (req: Request, res: Response) => {
+  try {
+    return await submitApplicationHandler(req, res);
+  } catch (err) {
+    console.error("submitApplication failed:", err);
+    return res.status(500).json({ error: "Failed to submit application" });
+  }
+};
+
+async function submitApplicationHandler(req: Request, res: Response) {
   const { slug } = req.params;
   const { candidate_name, candidate_email, answers } = req.body;
   const file = req.file;
@@ -46,7 +55,8 @@ export const submitApplication = async (req: Request, res: Response) => {
       file.buffer,
     );
     publicUrl = saved.publicUrl;
-  } catch {
+  } catch (err) {
+    console.error("saveCv failed:", err);
     return res.status(500).json({ error: "Failed to save CV" });
   }
 
@@ -97,12 +107,12 @@ export const submitApplication = async (req: Request, res: Response) => {
     message: "Application submitted successfully",
     application_id: application._id,
   });
-};
+}
 
 export const downloadCv = async (req: Request, res: Response) => {
   const { file_id } = req.params;
 
-  const jobId = await getGridFsCvJobId(file_id);
+  const jobId = await getCvJobId(file_id);
   if (!jobId) {
     return res.status(404).json({ error: "CV not found" });
   }

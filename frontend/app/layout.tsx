@@ -52,7 +52,9 @@ export default function RootLayout({
           {children}
           <Toaster position="top-center" richColors />
         </AuthProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {process.env.NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS === 'true' && (
+          <Analytics />
+        )}
       </body>
     </html>
   )

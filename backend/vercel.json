@@ -3,5 +3,7 @@
   "env": {
     "CORS_ORIGINS": "https://hire-doc.vercel.app,http://localhost:3000,http://127.0.0.1:3000",
     "API_BASE_URL": "https://hiredocbackend.vercel.app"
-  }
+  },
+  "builds": [{ "src": "src/index.ts", "use": "@vercel/node" }],
+  "routes": [{ "src": "/(.*)", "dest": "src/index.ts" }]
 }
