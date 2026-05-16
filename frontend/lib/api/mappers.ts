@@ -65,6 +65,7 @@ export interface BackendJob {
   is_published: boolean;
   created_at?: string;
   application_count?: number;
+  question_count?: number;
   questions?: BackendQuestion[];
 }
 
@@ -99,6 +100,12 @@ export interface BackendAISummary {
   recommendation: string;
 }
 
+export interface BackendScreeningResponse {
+  question_id: string;
+  question_text: string;
+  answer: string;
+}
+
 export interface BackendApplicationDetail {
   _id: string;
   job_id: string;
@@ -106,6 +113,7 @@ export interface BackendApplicationDetail {
   candidate_email: string;
   cv_file_url: string;
   answers: Record<string, string>;
+  screening_responses?: BackendScreeningResponse[];
   score: number | null;
   ai_summary: BackendAISummary | null;
   ai_recommendation: string | null;
@@ -143,10 +151,12 @@ export function mapAIRequirementsToFrontend(
 
 export function mapJobFromBackend(
   job: BackendJob,
-  extras?: { applicationCount?: number },
+  extras?: { applicationCount?: number; questionCount?: number },
 ): Job {
   const applicants =
     extras?.applicationCount ?? job.application_count ?? 0;
+  const questionCount =
+    extras?.questionCount ?? job.question_count ?? job.questions?.length ?? 0;
 
   return {
     id: job._id,
@@ -168,6 +178,7 @@ export function mapJobFromBackend(
         })
       : undefined,
     applicants,
+    questionCount,
     shortlisted: 0,
     aiRequirements: job.ai_requirements
       ? mapAIRequirementsToFrontend(job.ai_requirements)
@@ -228,9 +239,9 @@ export function mapApplicationDetailToCandidate(
     summary: summary?.recruiter_summary ?? base.summary,
     experience: summary?.experience_match,
     questions: summary?.suggested_interview_questions ?? [],
-    answers: Object.entries(app.answers ?? {}).map(([question, answer]) => ({
-      question,
-      answer,
+    answers: (app.screening_responses ?? []).map((item) => ({
+      question: item.question_text,
+      answer: item.answer?.trim() ? item.answer : "(No answer provided)",
       score: 0,
     })),
   };

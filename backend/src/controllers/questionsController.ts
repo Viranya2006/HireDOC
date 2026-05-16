@@ -31,7 +31,15 @@ export const setQuestions = async (req: Request, res: Response) => {
 };
 
 export const getQuestions = async (req: Request, res: Response) => {
-  const questions = await Question.find({ job_id: req.params.job_id })
+  const { job_id } = req.params;
+
+  const job = await Job.findOne({
+    _id: job_id,
+    recruiter_id: req.recruiter!._id,
+  });
+  if (!job) return res.status(404).json({ error: "Job not found" });
+
+  const questions = await Question.find({ job_id })
     .sort({ order_index: 1 })
     .lean();
   res.json({ questions });

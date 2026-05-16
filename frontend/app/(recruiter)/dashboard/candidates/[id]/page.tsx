@@ -8,6 +8,8 @@ import { getCandidateById } from "@/lib/api/applications";
 import type { Candidate } from "@/lib/types/application";
 import { ScoreRing } from "@/components/score-ring";
 import { SkillChip } from "@/components/skill-chip";
+import { CandidateScreeningResponses } from "@/components/dashboard/candidate-screening-responses";
+import { CandidateInterviewQuestions } from "@/components/dashboard/candidate-interview-questions";
 import { ROUTES } from "@/lib/constants/routes";
 
 function CandidateDetailContent() {
@@ -72,9 +74,9 @@ function CandidateDetailContent() {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl border border-[#E8E2D9] p-8"
+        className="bg-white rounded-2xl border border-[#E8E2D9] p-8 space-y-8"
       >
-        <motion.div className="flex flex-wrap items-start gap-6 mb-8">
+        <div className="flex flex-wrap items-start gap-6">
           <ScoreRing score={candidate.score} size={120} />
           <div className="flex-1 min-w-[200px]">
             <h1 className="font-display font-extrabold text-2xl text-[#0F0F0F]">
@@ -85,14 +87,19 @@ function CandidateDetailContent() {
               Applied {candidate.appliedAgo}
             </p>
           </div>
-        </motion.div>
+        </div>
 
-        <p className="font-body text-[#0F0F0F] leading-relaxed mb-8">
-          {candidate.summary}
-        </p>
+        <div>
+          <h2 className="font-display font-bold text-sm uppercase text-[#6B6560] mb-3">
+            AI summary
+          </h2>
+          <p className="font-body text-[#0F0F0F] leading-relaxed">
+            {candidate.summary}
+          </p>
+        </div>
 
         {candidate.matchingSkills.length > 0 && (
-          <div className="mb-6">
+          <div>
             <h2 className="font-display font-bold text-sm uppercase text-[#6B6560] mb-3">
               Matching skills
             </h2>
@@ -105,7 +112,7 @@ function CandidateDetailContent() {
         )}
 
         {candidate.gaps.length > 0 && (
-          <div className="mb-6">
+          <div>
             <h2 className="font-display font-bold text-sm uppercase text-[#6B6560] mb-3">
               Gaps
             </h2>
@@ -118,7 +125,7 @@ function CandidateDetailContent() {
         )}
 
         {candidate.redFlags.length > 0 && (
-          <motion.div className="mb-6">
+          <div>
             <h2 className="font-display font-bold text-sm uppercase text-[#FF4D2E] mb-3">
               Red flags
             </h2>
@@ -127,8 +134,16 @@ function CandidateDetailContent() {
                 <li key={flag}>{flag}</li>
               ))}
             </ul>
-          </motion.div>
+          </div>
         )}
+
+        <CandidateScreeningResponses
+          answers={candidate.answers}
+          title="Screening questions & answers"
+          emptyMessage="This candidate did not answer any screening questions, or the job has no screening questions configured."
+        />
+
+        <CandidateInterviewQuestions questions={candidate.questions} />
       </motion.div>
     </div>
   );

@@ -12,8 +12,9 @@ import {
   saveJobDraft,
   clearJobDraft,
 } from "@/lib/api/jobs";
-import { analyzeJD } from "@/lib/api/minimax";
+import { analyzeJD, type JDAnalysisResult } from "@/lib/api/minimax";
 import { setJobQuestions } from "@/lib/api/questions";
+import { normalizeQuestions } from "@/components/dashboard/questions-editor";
 import { ApiError } from "@/lib/api/client";
 import type { JobType } from "@/lib/types/job";
 import { ROUTES } from "@/lib/constants/routes";
@@ -27,6 +28,8 @@ export default function JobCreationPage() {
   const [step, setStep] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [savingQuestions, setSavingQuestions] = useState(false);
+  const [analysis, setAnalysis] = useState<JDAnalysisResult | null>(null);
   const [draftJobId, setDraftJobId] = useState<string | null>(null);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
 
@@ -75,6 +78,7 @@ export default function JobCreationPage() {
       if (questions.length > 0) {
         await setJobQuestions(jobId, questions);
       }
+      setAnalysis(result);
       setForm((f) => ({ ...f, questions, slug }));
       setStep(2);
       toast.success("MiniMax analysis complete");
@@ -84,6 +88,31 @@ export default function JobCreationPage() {
       );
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const handleSaveQuestionsAndContinue = async () => {
+    const cleaned = normalizeQuestions(form.questions);
+    if (cleaned.length === 0) {
+      toast.error("Add at least one screening question");
+      return;
+    }
+    if (!draftJobId) {
+      toast.error("Complete analysis before continuing");
+      return;
+    }
+
+    setSavingQuestions(true);
+    try {
+      await setJobQuestions(draftJobId, cleaned);
+      setForm((f) => ({ ...f, questions: cleaned }));
+      setStep(3);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to save questions",
+      );
+    } finally {
+      setSavingQuestions(false);
     }
   };
 
@@ -303,7 +332,15 @@ export default function JobCreationPage() {
           </motion.div>
         )}
 
-        {step === 2 && <MiniMaxAnalysis questions={form.questions} />}
+        {step === 2 && (
+          <MiniMaxAnalysis
+            analysis={analysis}
+            questions={form.questions}
+            onQuestionsChange={(questions) =>
+              setForm((f) => ({ ...f, questions }))
+            }
+          />
+        )}
 
         {step === 3 && (
           <div className="max-w-[680px] mx-auto bg-white rounded-2xl border p-8 text-center">
@@ -339,11 +376,21 @@ export default function JobCreationPage() {
             type="button"
             onClick={() => {
               if (step === 1) handleAnalyze();
+              else if (step === 2) handleSaveQuestionsAndContinue();
               else setStep((s) => Math.min(3, s + 1));
             }}
-            className="flex items-center gap-2 px-6 py-3 bg-[#C8F135] rounded-xl font-semibold text-sm"
+            disabled={savingQuestions || (step === 1 && analyzing)}
+            className="flex items-center gap-2 px-6 py-3 bg-[#C8F135] rounded-xl font-semibold text-sm disabled:opacity-50"
           >
-            {step === 1 ? "Analyze" : "Continue"}
+            {step === 1
+              ? analyzing
+                ? "Analyzing…"
+                : "Analyze"
+              : step === 2
+                ? savingQuestions
+                  ? "Saving…"
+                  : "Save & continue"
+                : "Continue"}
             <ArrowRight className="w-4 h-4" />
           </button>
         </footer>
