@@ -8,6 +8,21 @@ export const DEFAULT_MONGODB_URI = "mongodb://127.0.0.1:27017/hiredoc";
 
 const port = Number(process.env.PORT) || 5000;
 
+const DEFAULT_CORS_ORIGINS = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://hire-doc.vercel.app",
+];
+
+function parseCorsOrigins(raw: string | undefined): string[] {
+  if (!raw?.trim()) return DEFAULT_CORS_ORIGINS;
+  const fromEnv = raw
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  return fromEnv.length > 0 ? fromEnv : DEFAULT_CORS_ORIGINS;
+}
+
 export const env = {
   port,
   nodeEnv: process.env.NODE_ENV ?? "development",
@@ -20,6 +35,7 @@ export const env = {
   apiBaseUrl:
     process.env.API_BASE_URL?.replace(/\/$/, "") ??
     `http://localhost:${port}`,
+  corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
   minimaxApiKey: normalizeMiniMaxApiKey(process.env.MINIMAX_API_KEY ?? ""),
   minimaxGroupId: (process.env.MINIMAX_GROUP_ID ?? "").trim(),
   firebaseServiceAccountJson:
