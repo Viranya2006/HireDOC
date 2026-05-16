@@ -40,9 +40,9 @@ export function CandidateTable({
       initial={{ y: 16, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white rounded-xl overflow-hidden flex-1 flex flex-col"
+      className="bg-white rounded-xl border border-[rgba(15,15,15,0.08)] overflow-hidden flex-1 flex flex-col"
     >
-      <div className="grid grid-cols-[1fr_80px_1fr_100px_100px_120px] gap-4 px-5 py-3 bg-[#F5F0E8] border-b border-[rgba(15,15,15,0.10)]">
+      <div className="grid grid-cols-[1fr_72px_1fr_92px_92px_104px] gap-3 px-4 py-2.5 bg-[#F6F7F9] border-b border-[rgba(15,15,15,0.10)]">
         <span className="font-body text-[#6B6560] text-[11px] font-semibold tracking-wider uppercase">
           Candidate
         </span>
@@ -79,22 +79,22 @@ export function CandidateTable({
                 ease: [0.16, 1, 0.3, 1],
               }}
               onClick={() => onSelectCandidate(candidate)}
-              className={`grid grid-cols-[1fr_80px_1fr_100px_100px_120px] gap-4 px-5 py-3 items-center cursor-pointer transition-colors ${
+              className={`grid grid-cols-[1fr_72px_1fr_92px_92px_104px] gap-3 px-4 py-2.5 items-center cursor-pointer transition-colors ${
                 isSelected
-                  ? "bg-[rgba(200,241,53,0.06)] border-l-[3px] border-[#C8F135]"
+                  ? "bg-[#F6F7F9]"
                   : isEven
                     ? "bg-[#FAFAF8]"
                     : "bg-white"
-              } ${!isSelected && "hover:bg-[#F5F0E8]"}`}
+              } ${!isSelected && "hover:bg-[#F6F7F9]"}`}
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-[#EDE8DC] flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#EDE8DC] flex items-center justify-center shrink-0">
                   <span className="font-body text-[#0F0F0F] text-xs font-semibold">
                     {candidate.initials}
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <p className="font-display font-bold text-[14px] truncate">
+                  <p className="font-display font-bold text-[13px] truncate">
                     {candidate.name}
                   </p>
                   <p className="font-body text-[#6B6560] text-xs truncate">
@@ -104,7 +104,7 @@ export function CandidateTable({
               </div>
 
               <div className="flex items-center">
-                <ScoreRing score={candidate.score} size={32} strokeWidth={3} />
+                <ScoreRing score={candidate.score} size={28} strokeWidth={3} />
               </div>
 
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -132,7 +132,7 @@ export function CandidateTable({
                 <Link
                   href={ROUTES.candidate(jobId, candidate.id)}
                   onClick={(e) => e.stopPropagation()}
-                  className="px-3 py-1.5 border border-[rgba(15,15,15,0.15)] rounded-lg font-body text-xs font-medium hover:bg-[#C8F135] hover:border-[#C8F135] inline-block"
+                  className="px-2.5 py-1 border border-[rgba(15,15,15,0.15)] rounded-lg font-body text-xs font-medium hover:bg-[#C8F135] hover:border-[#C8F135] inline-block"
                 >
                   Full brief
                 </Link>

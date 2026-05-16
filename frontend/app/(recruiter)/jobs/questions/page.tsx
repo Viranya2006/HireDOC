@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ExternalLink, ListChecks } from "lucide-react";
+import { ExternalLink, ListChecks, MessageSquareText } from "lucide-react";
 import { getJobs, getJobById } from "@/lib/api/jobs";
 import { setJobQuestions } from "@/lib/api/questions";
 import { ApiError } from "@/lib/api/client";
@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 const statusStyles: Record<string, string> = {
   active: "bg-[#00C896]/10 text-[#00C896] border-[#00C896]/20",
-  draft: "bg-[#F5F0E8] text-[#6B6560] border-[#E8E2D9]",
+  draft: "bg-[#F6F7F9] text-[#6B6560] border-[#E8E2D9]",
   closed: "bg-[#FF4D2E]/10 text-[#FF4D2E] border-[#FF4D2E]/20",
 };
 
@@ -36,6 +36,16 @@ function JobQuestionsContent() {
   const [saving, setSaving] = useState(false);
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId) ?? null;
+  const totalQuestions = jobs.reduce(
+    (total, job) =>
+      total +
+      (job.id === selectedJobId
+        ? normalizeQuestions(questions).length
+        : job.questionCount),
+    0,
+  );
+  const activeJobs = jobs.filter((job) => job.status === "active").length;
+  const selectedQuestionCount = normalizeQuestions(questions).length;
 
   const questionsDirty =
     JSON.stringify(normalizeQuestions(questions)) !==
@@ -147,33 +157,63 @@ function JobQuestionsContent() {
 
   return (
     <>
-      <header className="h-[72px] bg-white border-b border-[#E8E2D9] px-4 md:px-8 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-4">
-          <h1 className="font-display font-extrabold text-[#0F0F0F] text-xl">
+      <header className="h-16 bg-white border-b border-[#E8E2D9] px-4 md:px-6 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <h1 className="font-display font-extrabold text-[#0F0F0F] text-lg">
             Screening Questions
           </h1>
-          <span className="px-3 py-1 bg-[#F5F0E8] rounded-full font-mono text-xs text-[#6B6560]">
+          <span className="px-2.5 py-1 bg-[#F6F7F9] rounded-full font-mono text-xs text-[#6B6560]">
             {jobs.length} jobs
           </span>
         </div>
         <Link
           href={ROUTES.jobsNew}
-          className="px-4 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-sm hover:scale-[1.02] transition-transform"
+          className="px-3.5 py-2 bg-[#C8F135] rounded-full font-display font-semibold text-xs hover:scale-[1.02] transition-transform"
         >
           + New job
         </Link>
       </header>
 
-      <div className="p-4 md:p-8">
-        <div className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-160px)]">
+      <div className="p-4 md:p-5">
+        <div className="grid gap-3 md:grid-cols-3 mb-4">
+          <div className="bg-white rounded-xl border border-[#E8E2D9] p-3">
+            <p className="font-body text-[11px] font-semibold uppercase tracking-wide text-[#6B6560]">
+              Jobs
+            </p>
+            <p className="font-data text-xl font-bold text-[#0F0F0F]">
+              {jobs.length}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl border border-[#E8E2D9] p-3">
+            <p className="font-body text-[11px] font-semibold uppercase tracking-wide text-[#6B6560]">
+              Active jobs
+            </p>
+            <p className="font-data text-xl font-bold text-[#0F0F0F]">
+              {activeJobs}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl border border-[#E8E2D9] p-3">
+            <p className="font-body text-[11px] font-semibold uppercase tracking-wide text-[#6B6560]">
+              Questions
+            </p>
+            <p className="font-data text-xl font-bold text-[#0F0F0F]">
+              {totalQuestions}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-4 min-h-[calc(100vh-216px)]">
           <motion.aside
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:w-[320px] shrink-0 bg-white rounded-2xl border border-[#E8E2D9] overflow-hidden flex flex-col max-h-[480px] lg:max-h-none"
+            className="lg:w-[276px] shrink-0 bg-white rounded-xl border border-[#E8E2D9] overflow-hidden flex flex-col max-h-[380px] lg:max-h-none"
           >
-            <div className="px-4 py-3 border-b border-[#E8E2D9] bg-[#FAFAF8]">
-              <p className="font-display font-semibold text-xs text-[#6B6560] uppercase">
-                Jobs
+            <div className="px-3.5 py-3 border-b border-[#E8E2D9] bg-[#FAFAF8]">
+              <p className="font-display font-semibold text-xs text-[#0F0F0F]">
+                Choose a job
+              </p>
+              <p className="font-body text-[11px] text-[#6B6560] mt-0.5">
+                Select a role to edit its public screening questions.
               </p>
             </div>
             <ul className="overflow-y-auto flex-1 divide-y divide-[#E8E2D9]">
@@ -188,22 +228,28 @@ function JobQuestionsContent() {
                     <button
                       type="button"
                       onClick={() => selectJob(job.id)}
-                      className={`w-full text-left px-4 py-3.5 transition-colors ${
+                      className={`w-full text-left px-3.5 py-2.5 transition-colors ${
                         isSelected
-                          ? "bg-[rgba(200,241,53,0.12)] border-l-[3px] border-l-[#C8F135]"
-                          : "hover:bg-[#FAFAF8] border-l-[3px] border-l-transparent"
+                          ? "bg-[#C8F135]"
+                          : "hover:bg-[#FAFAF8]"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-display font-bold text-sm text-[#0F0F0F] truncate">
+                          <p className="font-display font-bold text-[13px] text-[#0F0F0F] truncate">
                             {job.title}
                           </p>
                           <p className="font-body text-xs text-[#6B6560] truncate">
                             {job.company}
                           </p>
                         </div>
-                        <span className="font-mono text-xs text-[#6B6560] bg-[#F5F0E8] px-2 py-0.5 rounded-full shrink-0">
+                        <span
+                          className={`font-mono text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                            isSelected
+                              ? "bg-white/70 text-[#0F0F0F]"
+                              : "bg-[#F6F7F9] text-[#6B6560]"
+                          }`}
+                        >
                           {count}
                         </span>
                       </div>
@@ -227,20 +273,34 @@ function JobQuestionsContent() {
           >
             {selectedJob ? (
               <div className="space-y-4">
-                <div className="bg-white rounded-2xl border border-[#E8E2D9] p-5 md:p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="bg-white rounded-xl border border-[#E8E2D9] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <h2 className="font-display font-extrabold text-lg text-[#0F0F0F]">
-                        {selectedJob.title}
-                      </h2>
-                      <p className="font-body text-sm text-[#6B6560] mt-0.5">
+                      <div className="flex items-center gap-2">
+                        <MessageSquareText className="w-4 h-4 text-[#5B7A12]" />
+                        <h2 className="font-display font-extrabold text-base text-[#0F0F0F]">
+                          {selectedJob.title}
+                        </h2>
+                      </div>
+                      <p className="font-body text-xs text-[#6B6560] mt-0.5">
                         {selectedJob.company} · {selectedJob.location}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <span
+                        className={`px-2.5 py-1 rounded-lg border text-[11px] font-display font-semibold capitalize ${statusStyles[selectedJob.status]}`}
+                      >
+                        {selectedJob.status}
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-[#F6F7F9] text-[11px] font-body text-[#6B6560]">
+                        {selectedQuestionCount} questions
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-[#F6F7F9] text-[11px] font-body text-[#6B6560]">
+                        {selectedJob.applicants} applicants
+                      </span>
                       <Link
                         href={ROUTES.dashboardForJob(selectedJob.id)}
-                        className="px-3 py-1.5 text-xs font-body font-medium border border-[#E8E2D9] rounded-lg hover:bg-[#F5F0E8]"
+                        className="px-3 py-1.5 text-xs font-body font-medium border border-[#E8E2D9] rounded-lg hover:bg-[#F6F7F9]"
                       >
                         View candidates
                       </Link>
@@ -256,34 +316,53 @@ function JobQuestionsContent() {
                       )}
                     </div>
                   </div>
-                  <p className="font-body text-xs text-[#6B6560] mt-4">
-                    These questions appear on the public apply form for this job.
-                    Candidates answer them when submitting their application.
-                  </p>
+                  <div className="mt-3 rounded-lg bg-[#F6F7F9] px-3 py-2">
+                    <p className="font-body text-xs text-[#6B6560]">
+                      These questions appear on the public apply form. Keep them
+                      short, role-specific, and easy for candidates to answer.
+                    </p>
+                  </div>
                 </div>
 
                 {loadingQuestions ? (
-                  <div className="bg-white rounded-2xl border border-[#E8E2D9] p-12 text-center">
+                  <div className="bg-white rounded-xl border border-[#E8E2D9] p-10 text-center">
                     <p className="font-body text-[#6B6560]">
                       Loading questions…
                     </p>
                   </div>
                 ) : (
                   <>
-                    <QuestionsEditor
-                      title="Questions for candidates"
-                      description="Edit, reorder, or add screening questions. Changes apply to new applications immediately."
-                      questions={questions}
-                      onChange={setQuestions}
-                      addLabel="Add screening question"
-                      placeholder="e.g. What is your experience with our core stack?"
-                    />
+                    <div className="relative">
+                      {questionsDirty && (
+                        <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-[#E8E2D9] bg-white px-4 py-3">
+                          <p className="font-body text-xs text-[#6B6560]">
+                            You have unsaved question changes for this job.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="px-4 py-2 bg-[#C8F135] rounded-lg font-display font-semibold text-xs disabled:opacity-50"
+                          >
+                            {saving ? "Saving..." : "Save now"}
+                          </button>
+                        </div>
+                      )}
+                      <QuestionsEditor
+                        title="Questions for candidates"
+                        description="Edit, reorder, or add screening questions. Changes apply to new applications immediately."
+                        questions={questions}
+                        onChange={setQuestions}
+                        addLabel="Add screening question"
+                        placeholder="e.g. What is your experience with our core stack?"
+                      />
+                    </div>
                     <div className="flex flex-wrap gap-3 justify-end">
                       <button
                         type="button"
                         onClick={() => setQuestions(savedQuestions)}
                         disabled={!questionsDirty || saving}
-                        className="px-5 py-2.5 border border-[#E8E2D9] rounded-xl font-body text-sm text-[#6B6560] disabled:opacity-40"
+                        className="px-4 py-2 border border-[#E8E2D9] rounded-lg font-body text-xs text-[#6B6560] disabled:opacity-40"
                       >
                         Discard changes
                       </button>
@@ -291,7 +370,7 @@ function JobQuestionsContent() {
                         type="button"
                         onClick={handleSave}
                         disabled={!questionsDirty || saving}
-                        className="px-6 py-2.5 bg-[#C8F135] rounded-xl font-display font-semibold text-sm disabled:opacity-50"
+                        className="px-5 py-2 bg-[#C8F135] rounded-lg font-display font-semibold text-xs disabled:opacity-50"
                       >
                         {saving ? "Saving…" : "Save questions"}
                       </button>
@@ -300,7 +379,7 @@ function JobQuestionsContent() {
                 )}
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-[#E8E2D9] p-12 text-center">
+              <div className="bg-white rounded-xl border border-[#E8E2D9] p-10 text-center">
                 <p className="font-body text-[#6B6560]">
                   Select a job to view its screening questions.
                 </p>

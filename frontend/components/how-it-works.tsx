@@ -41,7 +41,7 @@ export function HowItWorks() {
   const isInView = useInView(ref, { once: true, amount: 0.2 })
 
   return (
-    <section id="how-it-works" ref={ref} className="py-20 lg:py-28 bg-[#F5F0E8]">
+    <section id="how-it-works" ref={ref} className="py-20 lg:py-28 bg-[#F6F7F9]">
       <div className="max-w-[1200px] mx-auto px-6">
         {/* Header */}
         <motion.div

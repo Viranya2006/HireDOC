@@ -55,7 +55,7 @@ export function QuestionsEditor({
       className={
         hideHeader
           ? ""
-          : "bg-white rounded-2xl p-6 border border-[rgba(15,15,15,0.08)]"
+          : "bg-white rounded-xl p-5 border border-[rgba(15,15,15,0.08)]"
       }
     >
       {!hideHeader && (
@@ -70,7 +70,7 @@ export function QuestionsEditor({
               </p>
             )}
           </div>
-          <span className="font-data text-xs text-[#6B6560] bg-[#F5F0E8] px-2.5 py-1 rounded-full shrink-0">
+          <span className="font-data text-xs text-[#6B6560] bg-[#F6F7F9] px-2.5 py-1 rounded-full shrink-0">
             {questions.length}{" "}
             {questions.length === 1 ? "question" : "questions"}
           </span>
@@ -108,13 +108,13 @@ export function QuestionsEditor({
               onChange={(e) => updateQuestion(index, e.target.value)}
               rows={2}
               placeholder={placeholder}
-              className="flex-1 px-3 py-2.5 rounded-xl border border-[rgba(15,15,15,0.12)] font-body text-sm text-[#0F0F0F] resize-y min-h-[44px] focus:border-[#C8F135] focus:outline-none"
+              className="flex-1 px-3 py-2 rounded-lg border border-[rgba(15,15,15,0.12)] font-body text-sm text-[#0F0F0F] resize-y min-h-[40px] focus:border-[#C8F135] focus:outline-none"
             />
             <button
               type="button"
               onClick={() => removeQuestion(index)}
               disabled={questions.length <= minQuestions}
-              className="p-2.5 mt-1 text-[#6B6560] hover:text-[#FF4D2E] hover:bg-[#FF4D2E]/10 rounded-lg transition-colors disabled:opacity-25 disabled:pointer-events-none"
+              className="p-2 mt-1 text-[#6B6560] hover:text-[#FF4D2E] hover:bg-[#FF4D2E]/10 rounded-lg transition-colors disabled:opacity-25 disabled:pointer-events-none"
               aria-label="Remove question"
             >
               <Trash2 className="w-4 h-4" />
@@ -126,7 +126,7 @@ export function QuestionsEditor({
       <button
         type="button"
         onClick={addQuestion}
-        className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-[rgba(15,15,15,0.2)] font-body text-sm text-[#6B6560] hover:border-[#C8F135] hover:text-[#0F0F0F] transition-colors w-full justify-center"
+        className="mt-4 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-[rgba(15,15,15,0.2)] font-body text-xs text-[#6B6560] hover:border-[#C8F135] hover:text-[#0F0F0F] transition-colors w-full justify-center"
       >
         <Plus className="w-4 h-4" />
         {addLabel}

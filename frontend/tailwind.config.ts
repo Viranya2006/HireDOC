@@ -17,7 +17,7 @@ export default {
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
-        'bg-base': '#F5F0E8',
+        'bg-base': '#F6F7F9',
         'bg-surface': '#EDE8DC',
         'bg-card': '#FFFFFF',
         'bg-dark': '#0F0F0F',

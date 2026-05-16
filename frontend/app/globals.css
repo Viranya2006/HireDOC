@@ -7,7 +7,7 @@
   /* HireDoc AI — Cream × Editorial Bold */
   
   /* Base — Cream */
-  --bg-base: #F5F0E8;
+  --bg-base: #F6F7F9;
   --bg-surface: #EDE8DC;
   --bg-card: #FFFFFF;
   --bg-dark: #0F0F0F;
@@ -40,7 +40,7 @@
   --radius-full: 9999px;
   
   /* Semantic mappings for shadcn */
-  --background: #F5F0E8;
+  --background: #F6F7F9;
   --foreground: #0F0F0F;
   --card: #FFFFFF;
   --card-foreground: #0F0F0F;
