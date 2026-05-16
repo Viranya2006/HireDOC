@@ -12,6 +12,8 @@ export interface AISummary {
   recommendation: string;
 }
 
+export type RecruiterStatus = "shortlisted" | "rejected";
+
 export interface IApplication extends Document {
   job_id: Types.ObjectId;
   candidate_name: string;
@@ -21,6 +23,9 @@ export interface IApplication extends Document {
   score: number | null;
   ai_summary: AISummary | null;
   ai_recommendation: "strong_yes" | "yes" | "maybe" | "no" | null;
+  recruiter_status: RecruiterStatus | null;
+  decision_at: Date | null;
+  decision_email_sent_at: Date | null;
   created_at: Date;
 }
 
@@ -48,6 +53,13 @@ const ApplicationSchema = new Schema<IApplication>(
       enum: ["strong_yes", "yes", "maybe", "no", null],
       default: null,
     },
+    recruiter_status: {
+      type: String,
+      enum: ["shortlisted", "rejected", null],
+      default: null,
+    },
+    decision_at: { type: Date, default: null },
+    decision_email_sent_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: "created_at", updatedAt: false } },
 );

@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Users,
   Briefcase,
+  ListChecks,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { ROUTES } from "@/lib/constants/routes";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Briefcase, label: "All Jobs", path: "/jobs" },
+  { icon: ListChecks, label: "Questions", path: "/jobs/questions" },
   { icon: Users, label: "Candidates", path: "/dashboard" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
@@ -42,7 +44,15 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   }, []);
 
   const hrefWithJob = (path: string) => {
-    if (path === "/jobs" || path === "/dashboard/settings") return path;
+    if (
+      path === "/jobs" ||
+      path === "/jobs/questions" ||
+      path === "/dashboard/settings"
+    ) {
+      return path === "/jobs/questions" && jobId
+        ? `${path}?jobId=${jobId}`
+        : path;
+    }
     return `${path}?jobId=${jobId}`;
   };
 
@@ -57,8 +67,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     onNavigate?.();
   };
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     router.push(ROUTES.home);
     onNavigate?.();
   };
@@ -115,7 +125,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             pathname === item.path ||
             (item.path === "/dashboard" &&
               pathname === "/dashboard") ||
-            (item.path === "/jobs" && pathname.startsWith("/jobs")) ||
+            (item.path === "/jobs" &&
+              pathname.startsWith("/jobs") &&
+              pathname !== "/jobs/questions") ||
+            (item.path === "/jobs/questions" &&
+              pathname === "/jobs/questions") ||
             (item.path === "/dashboard/settings" &&
               pathname === "/dashboard/settings");
 

@@ -9,8 +9,11 @@ import {
   Users,
   TrendingUp,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import { ScoreRing } from "@/components/score-ring";
+import { QuestionsEditor } from "@/components/dashboard/questions-editor";
+import type { JDAnalysisResult } from "@/lib/api/minimax";
 
 const analysisData = {
   overallScore: 92,
@@ -97,6 +100,35 @@ function _UnusedScoreRing({ score, size = 120 }: { score: number; size?: number 
   );
 }
 
+type AnalysisMetric = {
+  label: string;
+  score: number;
+  color: string;
+  insight: string;
+  icon: LucideIcon;
+};
+
+const METRIC_ICON_BY_LABEL: Record<string, LucideIcon> = {
+  "Role Clarity": Target,
+  "Screening Coverage": Users,
+  "Experience Fit": TrendingUp,
+  "Candidate Pool": Users,
+  "Market Fit": TrendingUp,
+};
+
+const FALLBACK_METRIC_ICONS: LucideIcon[] = [Target, Users, TrendingUp];
+
+function attachMetricIcons(
+  metrics: Omit<AnalysisMetric, "icon">[],
+): AnalysisMetric[] {
+  return metrics.map((metric, index) => ({
+    ...metric,
+    icon:
+      METRIC_ICON_BY_LABEL[metric.label] ??
+      FALLBACK_METRIC_ICONS[index % FALLBACK_METRIC_ICONS.length],
+  }));
+}
+
 function MetricBar({ score, color }: { score: number; color: string }) {
   return (
     <div className="h-2 bg-[#EDE8DC] rounded-full overflow-hidden flex-1">
@@ -112,10 +144,26 @@ function MetricBar({ score, color }: { score: number; color: string }) {
 }
 
 interface MiniMaxAnalysisProps {
-  questions?: string[];
+  analysis?: JDAnalysisResult | null;
+  questions: string[];
+  onQuestionsChange: (questions: string[]) => void;
 }
 
-export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps) {
+export function MiniMaxAnalysis({
+  analysis,
+  questions,
+  onQuestionsChange,
+}: MiniMaxAnalysisProps) {
+  const data = analysis
+    ? {
+        overallScore: analysis.overallScore,
+        metrics: attachMetricIcons(analysis.metrics),
+        strengths: analysis.strengths,
+        suggestions: analysis.suggestions,
+        requiredSkills: analysis.requirements.requiredSkills,
+        niceToHave: analysis.requirements.niceToHaveSkills,
+      }
+    : analysisData;
   return (
     <motion.div
       initial={{ y: 24, opacity: 0 }}
@@ -159,7 +207,7 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
             </h3>
             <div className="flex justify-center mb-4">
               <ScoreRing
-                score={analysisData.overallScore}
+                score={data.overallScore}
                 size={120}
                 strokeWidth={10}
                 accentColor="#C8F135"
@@ -182,7 +230,9 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
               Key Metrics
             </h3>
             <div className="space-y-4">
-              {analysisData.metrics.map((metric, index) => (
+              {data.metrics.map((metric, index) => {
+                const Icon = metric.icon;
+                return (
                 <motion.div
                   key={metric.label}
                   initial={{ x: -10, opacity: 0 }}
@@ -190,7 +240,7 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
                   transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }}
                 >
                   <div className="flex items-center gap-3 mb-1">
-                    <metric.icon
+                    <Icon
                       className="w-4 h-4"
                       style={{ color: metric.color }}
                     />
@@ -206,7 +256,8 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
                     {metric.insight}
                   </p>
                 </motion.div>
-              ))}
+              );
+              })}
             </div>
           </motion.div>
 
@@ -225,7 +276,7 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
                 Required
               </p>
               <div className="flex flex-wrap gap-2">
-                {analysisData.requiredSkills.map((skill, index) => (
+                {data.requiredSkills.map((skill, index) => (
                   <motion.span
                     key={skill}
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -243,7 +294,7 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
                 Nice to Have
               </p>
               <div className="flex flex-wrap gap-2">
-                {analysisData.niceToHave.map((skill, index) => (
+                {data.niceToHave.map((skill, index) => (
                   <motion.span
                     key={skill}
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -272,7 +323,7 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
               </h3>
             </div>
             <ul className="space-y-2">
-              {analysisData.strengths.map((strength, index) => (
+              {data.strengths.map((strength, index) => (
                 <motion.li
                   key={index}
                   initial={{ x: -10, opacity: 0 }}
@@ -303,7 +354,7 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
               </h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {analysisData.suggestions.map((suggestion, index) => (
+              {data.suggestions.map((suggestion, index) => (
                 <motion.div
                   key={index}
                   initial={{ y: 10, opacity: 0 }}
@@ -319,6 +370,22 @@ export function MiniMaxAnalysis({ questions: _questions }: MiniMaxAnalysisProps)
             </div>
           </motion.div>
         </div>
+
+        <motion.div
+          initial={{ y: 16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.35, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-5"
+        >
+          <QuestionsEditor
+            title="Screening questions"
+            description="Review AI-generated questions, edit wording, reorder, or add your own before candidates apply."
+            questions={questions}
+            onChange={onQuestionsChange}
+            addLabel="Add screening question"
+            placeholder="e.g. Describe your experience with React in production…"
+          />
+        </motion.div>
       </div>
     </motion.div>
   );

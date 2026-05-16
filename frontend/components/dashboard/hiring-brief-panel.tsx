@@ -1,59 +1,25 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { X, Check, AlertTriangle } from "lucide-react";
 import type { Candidate } from "@/lib/types/application";
 import { ScoreRing } from "@/components/score-ring";
 import { SkillChip } from "@/components/skill-chip";
+import {
+  QuestionsEditor,
+  normalizeQuestions,
+} from "@/components/dashboard/questions-editor";
+import { CandidateScreeningResponses } from "@/components/dashboard/candidate-screening-responses";
+import { CandidateInterviewQuestions } from "@/components/dashboard/candidate-interview-questions";
 
 interface HiringBriefPanelProps {
   candidate: Candidate;
   onClose: () => void;
   onShortlist: () => void;
   onReject: () => void;
-}
-
-function LargeScoreRing({ score }: { score: number }) {
-  const size = 80;
-  const radius = (size - 6) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (score / 100) * circumference;
-
-  const getColor = (score: number) => {
-    if (score >= 80) return "#00C896";
-    if (score >= 60) return "#0057FF";
-    return "#FF4D2E";
-  };
-
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="transform -rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(15,15,15,0.08)"
-          strokeWidth="5"
-        />
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={getColor(score)}
-          strokeWidth="5"
-          strokeLinecap="round"
-          initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: circumference - progress }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center font-data font-bold text-[#0F0F0F] text-[32px]">
-        {score}
-      </span>
-    </div>
-  );
+  onInterviewQuestionsSave?: (questions: string[]) => Promise<void>;
+  actionsDisabled?: boolean;
 }
 
 export function HiringBriefPanel({
@@ -61,7 +27,39 @@ export function HiringBriefPanel({
   onClose,
   onShortlist,
   onReject,
+  onInterviewQuestionsSave,
+  actionsDisabled = false,
 }: HiringBriefPanelProps) {
+  const [interviewQuestions, setInterviewQuestions] = useState(
+    candidate.questions,
+  );
+  const [savingQuestions, setSavingQuestions] = useState(false);
+  const [editingQuestions, setEditingQuestions] = useState(false);
+
+  useEffect(() => {
+    setInterviewQuestions(candidate.questions);
+    setEditingQuestions(false);
+  }, [candidate.id, candidate.questions]);
+
+  const questionsDirty =
+    JSON.stringify(normalizeQuestions(interviewQuestions)) !==
+    JSON.stringify(normalizeQuestions(candidate.questions));
+
+  const handleSaveQuestions = async () => {
+    if (!onInterviewQuestionsSave) return;
+    const cleaned = normalizeQuestions(interviewQuestions);
+    if (cleaned.length === 0) {
+      return;
+    }
+    setSavingQuestions(true);
+    try {
+      await onInterviewQuestionsSave(cleaned);
+      setEditingQuestions(false);
+    } finally {
+      setSavingQuestions(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ x: 40, opacity: 0 }}
@@ -177,36 +175,101 @@ export function HiringBriefPanel({
           </p>
         </div>
 
+        {candidate.answers && candidate.answers.length > 0 && (
+          <CandidateScreeningResponses
+            answers={candidate.answers}
+            title="Screening Q&A"
+            compact
+          />
+        )}
+
         {/* Interview Questions */}
         <div>
-          <h4 className="font-display font-bold text-[#0F0F0F] text-sm mb-3">
-            Interview Questions
-          </h4>
-          <ol className="space-y-2">
-            {candidate.questions.map((question, index) => (
-              <li key={index} className="flex gap-2">
-                <span className="font-data text-[#C8F135] text-sm font-bold shrink-0">
-                  {index + 1}.
-                </span>
-                <p className="font-body text-[#0F0F0F] text-sm">{question}</p>
-              </li>
-            ))}
-          </ol>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <h4 className="font-display font-bold text-[#0F0F0F] text-sm">
+              Interview Questions
+            </h4>
+            {onInterviewQuestionsSave && candidate.questions.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (editingQuestions) {
+                    if (questionsDirty) {
+                      setInterviewQuestions(candidate.questions);
+                    }
+                    setEditingQuestions(false);
+                  } else {
+                    setEditingQuestions(true);
+                  }
+                }}
+                className="font-body text-xs text-[#0057FF] hover:underline"
+              >
+                {editingQuestions ? "Close" : "Customize"}
+              </button>
+            )}
+          </div>
+
+          {editingQuestions && onInterviewQuestionsSave ? (
+            <div className="space-y-3">
+              <QuestionsEditor
+                title=""
+                hideHeader
+                questions={interviewQuestions}
+                onChange={setInterviewQuestions}
+                addLabel="Add interview question"
+                placeholder="e.g. Walk me through a challenging project…"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveQuestions}
+                  disabled={
+                    savingQuestions ||
+                    !questionsDirty ||
+                    normalizeQuestions(interviewQuestions).length === 0
+                  }
+                  className="flex-1 py-2.5 bg-[#0057FF] text-white rounded-xl font-body text-sm font-semibold disabled:opacity-50"
+                >
+                  {savingQuestions ? "Saving…" : "Save questions"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInterviewQuestions(candidate.questions);
+                    setEditingQuestions(false);
+                  }}
+                  className="px-4 py-2.5 border rounded-xl font-body text-sm text-[#6B6560]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <CandidateInterviewQuestions
+              questions={candidate.questions}
+              title=""
+              compact
+            />
+          )}
         </div>
       </div>
 
       {/* Actions */}
       <div className="p-5 border-t border-[rgba(15,15,15,0.10)] flex gap-3">
         <button
+          type="button"
           onClick={onShortlist}
-          className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#C8F135] rounded-xl font-body text-[#0F0F0F] text-sm font-semibold hover:bg-[#b8e125] transition-colors"
+          disabled={actionsDisabled}
+          className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#C8F135] rounded-xl font-body text-[#0F0F0F] text-sm font-semibold hover:bg-[#b8e125] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Check className="w-4 h-4" />
           Shortlist
         </button>
         <button
+          type="button"
           onClick={onReject}
-          className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-[#FF4D2E] rounded-xl font-body text-[#FF4D2E] text-sm font-semibold hover:bg-[#FF4D2E]/10 transition-colors"
+          disabled={actionsDisabled}
+          className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-[#FF4D2E] rounded-xl font-body text-[#FF4D2E] text-sm font-semibold hover:bg-[#FF4D2E]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="w-4 h-4" />
           Reject

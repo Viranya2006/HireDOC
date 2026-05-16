@@ -49,17 +49,30 @@ export const getMyJobs = async (req: Request, res: Response) => {
     .sort({ created_at: -1 })
     .lean();
 
-  const counts = await Application.aggregate([
-    { $match: { job_id: { $in: jobs.map((j) => j._id) } } },
-    { $group: { _id: "$job_id", count: { $sum: 1 } } },
+  const jobIds = jobs.map((j) => j._id);
+
+  const [applicationCounts, questionCounts] = await Promise.all([
+    Application.aggregate([
+      { $match: { job_id: { $in: jobIds } } },
+      { $group: { _id: "$job_id", count: { $sum: 1 } } },
+    ]),
+    Question.aggregate([
+      { $match: { job_id: { $in: jobIds } } },
+      { $group: { _id: "$job_id", count: { $sum: 1 } } },
+    ]),
   ]);
-  const countMap = Object.fromEntries(
-    counts.map((c) => [c._id.toString(), c.count]),
+
+  const applicationCountMap = Object.fromEntries(
+    applicationCounts.map((c) => [c._id.toString(), c.count]),
+  );
+  const questionCountMap = Object.fromEntries(
+    questionCounts.map((c) => [c._id.toString(), c.count]),
   );
 
   const result = jobs.map((j) => ({
     ...j,
-    application_count: countMap[j._id.toString()] || 0,
+    application_count: applicationCountMap[j._id.toString()] || 0,
+    question_count: questionCountMap[j._id.toString()] || 0,
   }));
   res.json({ jobs: result });
 };
@@ -98,17 +111,28 @@ export const publishJob = async (req: Request, res: Response) => {
 };
 
 export const getPublicJob = async (req: Request, res: Response) => {
-  const job = await Job.findOne({
-    public_slug: req.params.slug,
-    is_published: true,
-  })
-    .select("_id title company location job_type description expires_at")
+  const slug = req.params.slug.trim();
+  const job = await Job.findOne({ public_slug: slug })
+    .select(
+      "_id title company location job_type description expires_at public_slug is_published",
+    )
     .lean();
 
-  if (!job)
-    return res.status(404).json({ error: "Job not found or not published" });
+  if (!job) {
+    return res.status(404).json({ error: "Job not found", code: "NOT_FOUND" });
+  }
+  if (!job.is_published) {
+    return res.status(403).json({
+      error:
+        "This job is not open for applications yet. Ask the recruiter to publish it first.",
+      code: "NOT_PUBLISHED",
+    });
+  }
   if (new Date(job.expires_at) < new Date()) {
-    return res.status(410).json({ error: "This job posting has expired" });
+    return res.status(410).json({
+      error: "This job posting has expired",
+      code: "EXPIRED",
+    });
   }
 
   const questions = await Question.find({ job_id: job._id })

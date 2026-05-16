@@ -8,7 +8,14 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { StatCards } from "@/components/dashboard/stat-cards";
 import { CandidateTable } from "@/components/dashboard/candidate-table";
 import { HiringBriefPanel } from "@/components/dashboard/hiring-brief-panel";
-import { getCandidatesForJob } from "@/lib/api/applications";
+import {
+  getCandidateById,
+  getCandidatesForJob,
+  updateCandidateDecision,
+  updateInterviewQuestions,
+} from "@/lib/api/applications";
+import { ApiError } from "@/lib/api/client";
+import { toast } from "sonner";
 import { getJobById } from "@/lib/api/jobs";
 import type { Candidate } from "@/lib/types/application";
 import type { Job } from "@/lib/types/job";
@@ -24,6 +31,7 @@ function DashboardContent() {
     null,
   );
   const [loading, setLoading] = useState(true);
+  const [decisionLoading, setDecisionLoading] = useState(false);
 
   useEffect(() => {
     if (!jobId) {
@@ -42,11 +50,15 @@ function DashboardContent() {
       if (cancelled) return;
       setJob(jobData);
       setCandidates(candidateList);
-      setSelectedCandidate((prev) =>
-        prev && candidateList.some((c) => c.id === prev.id)
-          ? prev
-          : (candidateList[0] ?? null),
-      );
+      setSelectedCandidate((prev) => {
+        const nextId =
+          prev && candidateList.some((c) => c.id === prev.id)
+            ? prev.id
+            : candidateList[0]?.id;
+        if (!nextId) return null;
+        if (prev?.id === nextId && prev.answers?.length) return prev;
+        return candidateList.find((c) => c.id === nextId) ?? null;
+      });
       setLoading(false);
 
       const pending = candidateList.some((c) => c.score === 0);
@@ -70,6 +82,63 @@ function DashboardContent() {
       if (pollTimer) clearInterval(pollTimer);
     };
   }, [jobId]);
+
+  useEffect(() => {
+    if (!jobId || !selectedCandidate?.id) return;
+
+    let cancelled = false;
+    getCandidateById(selectedCandidate.id, jobId).then((detail) => {
+      if (!cancelled && detail) {
+        setSelectedCandidate(detail);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [jobId, selectedCandidate?.id]);
+
+  const applyCandidateUpdate = (updated: Candidate) => {
+    setCandidates((list) =>
+      list.map((c) => (c.id === updated.id ? updated : c)),
+    );
+    setSelectedCandidate(updated);
+  };
+
+  const handleDecision = async (
+    decision: "shortlisted" | "rejected",
+  ) => {
+    if (!selectedCandidate || !jobId || decisionLoading) return;
+    if (
+      decision === "rejected" &&
+      !window.confirm(
+        `Reject ${selectedCandidate.name}? They will receive an email notification.`,
+      )
+    ) {
+      return;
+    }
+
+    setDecisionLoading(true);
+    try {
+      const updated = await updateCandidateDecision(
+        jobId,
+        selectedCandidate.id,
+        decision,
+      );
+      applyCandidateUpdate(updated);
+      toast.success(
+        decision === "shortlisted"
+          ? `${selectedCandidate.name} shortlisted — email sent`
+          : `${selectedCandidate.name} rejected — email sent`,
+      );
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to update candidate",
+      );
+    } finally {
+      setDecisionLoading(false);
+    }
+  };
 
   const scored = candidates.filter((c) => c.score > 0);
   const stats = {
@@ -153,8 +222,18 @@ function DashboardContent() {
                 <HiringBriefPanel
                   candidate={selectedCandidate}
                   onClose={() => setSelectedCandidate(null)}
-                  onShortlist={() => {}}
-                  onReject={() => {}}
+                  onShortlist={() => handleDecision("shortlisted")}
+                  onReject={() => handleDecision("rejected")}
+                  actionsDisabled={decisionLoading}
+                  onInterviewQuestionsSave={async (questions) => {
+                    const updated = await updateInterviewQuestions(
+                      jobId,
+                      selectedCandidate.id,
+                      questions,
+                    );
+                    applyCandidateUpdate(updated);
+                    toast.success("Interview questions updated");
+                  }}
                 />
               </div>
             )}

@@ -31,7 +31,10 @@ export async function getJobs(): Promise<Job[]> {
     auth: true,
   });
   return jobs.map((j) =>
-    mapJobFromBackend(j, { applicationCount: j.application_count }),
+    mapJobFromBackend(j, {
+      applicationCount: j.application_count,
+      questionCount: j.question_count,
+    }),
   );
 }
 
@@ -47,14 +50,14 @@ export async function getJobById(id: string): Promise<Job | null> {
 }
 
 export async function getJobBySlug(slug: string): Promise<Job | null> {
-  try {
-    const { job } = await apiFetch<JobResponse>(
-      `/api/jobs/public/${encodeURIComponent(slug)}`,
-    );
-    return mapJobFromBackend(job);
-  } catch {
-    return null;
-  }
+  const { job } = await apiFetch<JobResponse>(
+    `/api/jobs/public/${encodeURIComponent(slug.trim())}`,
+  );
+  return mapJobFromBackend({
+    ...job,
+    public_slug: job.public_slug ?? slug,
+    is_published: true,
+  });
 }
 
 export async function createJob(input: CreateJobInput): Promise<Job> {

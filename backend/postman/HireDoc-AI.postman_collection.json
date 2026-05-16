@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "hiredoc-ai-collection",
     "name": "HireDoc AI API",
-    "description": "Express + MongoDB backend for HireDoc AI.\n\n**Setup**\n1. Import this collection + `HireDoc-AI.postman_environment.json`\n2. Select the environment\n3. Run **Auth → Send OTP** then **Verify OTP** (token auto-saves)\n4. Run requests in order within each folder\n\n**Base URL:** `http://localhost:5000` (default)",
+    "description": "Express + MongoDB backend for HireDoc AI.\n\n**Setup**\n1. Import this collection + `HireDoc-AI.postman_environment.json`\n2. Sign in via the web app, copy Firebase ID token into `firebaseIdToken`, run **Auth → Firebase Session**\n3. Run requests in order within each folder\n\n**Base URL:** `http://localhost:5000` (default)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -13,7 +13,7 @@
     { "key": "applicationId", "value": "" },
     { "key": "questionId", "value": "" },
     { "key": "recruiterEmail", "value": "recruiter@example.com" },
-    { "key": "lastOtp", "value": "" }
+    { "key": "firebaseIdToken", "value": "" }
   ],
   "auth": {
     "type": "bearer",
@@ -53,45 +53,16 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Send OTP",
+          "name": "Firebase Session",
           "request": {
             "auth": { "type": "noauth" },
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{recruiterEmail}}\",\n  \"organization_name\": \"Acme Labs\"\n}"
+              "raw": "{\n  \"idToken\": \"{{firebaseIdToken}}\",\n  \"organization_name\": \"Acme Labs\"\n}"
             },
-            "url": "{{baseUrl}}/api/auth/send-otp"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "const json = pm.response.json();",
-                  "if (json.dev_otp) {",
-                  "  pm.collectionVariables.set('lastOtp', json.dev_otp);",
-                  "  console.log('OTP saved to collection variable lastOtp:', json.dev_otp);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Verify OTP",
-          "request": {
-            "auth": { "type": "noauth" },
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{recruiterEmail}}\",\n  \"otp\": \"{{lastOtp}}\"\n}"
-            },
-            "url": "{{baseUrl}}/api/auth/verify-otp"
+            "url": "{{baseUrl}}/api/auth/firebase-session"
           },
           "event": [
             {

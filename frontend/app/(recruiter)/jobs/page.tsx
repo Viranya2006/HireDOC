@@ -22,8 +22,12 @@ export default function JobsPage() {
     getJobs().then(setJobs);
   }, []);
 
-  const copyApplyLink = (slug: string) => {
-    const url = `${window.location.origin}${ROUTES.apply(slug)}`;
+  const copyApplyLink = (job: Job) => {
+    if (job.status !== "active") {
+      toast.error("Publish this job before sharing the apply link.");
+      return;
+    }
+    const url = `${window.location.origin}${ROUTES.apply(job.slug)}`;
     navigator.clipboard.writeText(url);
     toast.success("Apply link copied to clipboard");
   };
@@ -48,7 +52,7 @@ export default function JobsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl border border-[#E8E2D9] overflow-hidden overflow-x-auto"
         >
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_140px] gap-4 px-6 py-4 bg-[#FAFAF8] border-b border-[#E8E2D9] min-w-[800px]">
+          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_200px] gap-4 px-6 py-4 bg-[#FAFAF8] border-b border-[#E8E2D9] min-w-[860px]">
             <span className="font-display font-semibold text-xs text-[#6B6560] uppercase">
               Job Title
             </span>
@@ -75,7 +79,7 @@ export default function JobsPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_140px] gap-4 px-6 py-4 items-center border-b border-[#E8E2D9] last:border-b-0 hover:bg-[#FAFAF8] min-w-[800px]"
+              className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_200px] gap-4 px-6 py-4 items-center border-b border-[#E8E2D9] last:border-b-0 hover:bg-[#FAFAF8] min-w-[860px]"
             >
               <div>
                 <Link
@@ -100,21 +104,39 @@ export default function JobsPage() {
               >
                 {job.status}
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <Link
+                  href={ROUTES.jobQuestions(job.id)}
+                  className="px-3 py-1.5 text-xs font-body font-medium border border-[#E8E2D9] rounded-lg hover:bg-[#F5F0E8]"
+                >
+                  Questions
+                </Link>
                 <button
                   type="button"
-                  onClick={() => copyApplyLink(job.slug)}
-                  className="px-3 py-1.5 text-xs font-body font-medium border border-[#E8E2D9] rounded-lg hover:bg-[#C8F135] hover:border-[#C8F135]"
+                  onClick={() => copyApplyLink(job)}
+                  disabled={job.status !== "active"}
+                  title={
+                    job.status !== "active"
+                      ? "Publish the job to share an apply link"
+                      : "Copy public apply link"
+                  }
+                  className="px-3 py-1.5 text-xs font-body font-medium border border-[#E8E2D9] rounded-lg hover:bg-[#C8F135] hover:border-[#C8F135] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 >
                   Copy link
                 </button>
-                <Link
-                  href={ROUTES.apply(job.slug)}
-                  target="_blank"
-                  className="px-3 py-1.5 text-xs font-body font-medium text-[#0057FF] hover:underline"
-                >
-                  Preview
-                </Link>
+                {job.status === "active" ? (
+                  <Link
+                    href={ROUTES.apply(job.slug)}
+                    target="_blank"
+                    className="px-3 py-1.5 text-xs font-body font-medium text-[#0057FF] hover:underline"
+                  >
+                    Preview
+                  </Link>
+                ) : (
+                  <span className="px-3 py-1.5 text-xs font-body text-[#6B6560]">
+                    Draft
+                  </span>
+                )}
               </div>
             </motion.div>
           ))}

@@ -9,6 +9,7 @@ import { submitApplication } from "@/lib/api/applications";
 import { ApiError } from "@/lib/api/client";
 import type { Job } from "@/lib/types/job";
 import { toast } from "sonner";
+import { JobDescription } from "@/components/job-description";
 
 export default function ApplyPage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function ApplyPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -31,16 +33,32 @@ export default function ApplyPage() {
   });
 
   useEffect(() => {
-    getJobBySlug(jobId).then((data) => {
-      setJob(data);
-      if (data) {
-        setFormData((f) => ({
-          ...f,
-          answers: data.questions.map(() => ""),
-        }));
-      }
+    if (!jobId?.trim()) {
+      setLoadError("Invalid application link.");
       setLoading(false);
-    });
+      return;
+    }
+
+    setLoadError("");
+    getJobBySlug(jobId)
+      .then((data) => {
+        setJob(data);
+        if (data) {
+          setFormData((f) => ({
+            ...f,
+            answers: data.questions.map(() => ""),
+          }));
+        }
+      })
+      .catch((err) => {
+        setJob(null);
+        setLoadError(
+          err instanceof ApiError
+            ? err.message
+            : "Could not load this job. Check the link and try again.",
+        );
+      })
+      .finally(() => setLoading(false));
   }, [jobId]);
 
   const updateAnswer = (index: number, value: string) => {
@@ -106,16 +124,31 @@ export default function ApplyPage() {
   }
 
   if (!job) {
+    const notPublished = loadError.toLowerCase().includes("not open");
+    const expired = loadError.toLowerCase().includes("expired");
+    const heading = notPublished
+      ? "Not accepting applications yet"
+      : expired
+        ? "Job posting expired"
+        : "Job not found";
+
     return (
-      <div className="min-h-screen bg-[#F5F0E8] flex flex-col items-center justify-center gap-4 p-8">
-        <h1 className="font-display font-bold text-2xl">Job not found</h1>
+      <motion.div className="min-h-screen bg-[#F5F0E8] flex flex-col items-center justify-center gap-4 p-8 text-center max-w-md mx-auto">
+        <h1 className="font-display font-bold text-2xl">{heading}</h1>
         <p className="font-body text-[#6B6560]">
-          This application link may have expired.
+          {loadError ||
+            "This application link may be wrong, or the job may have been removed."}
         </p>
+        {notPublished && (
+          <p className="font-body text-sm text-[#6B6560]">
+            Recruiters: publish the job from your dashboard, then share the apply
+            link again.
+          </p>
+        )}
         <Link href="/" className="text-[#0057FF] hover:underline">
           Back to home
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
@@ -459,9 +492,10 @@ export default function ApplyPage() {
               <h3 className="font-display font-bold text-[#0F0F0F] text-sm mb-4">
                 About This Role
               </h3>
-              <p className="font-body text-sm text-[#6B6560] leading-relaxed mb-6">
-                {job.description}
-              </p>
+              <JobDescription
+                description={job.description}
+                className="mb-6"
+              />
 
               <h4 className="font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-3">
                 Requirements

@@ -33,6 +33,7 @@ export interface Job {
   expiresAt?: string;
   postedAt?: string;
   applicants: number;
+  questionCount: number;
   shortlisted: number;
   aiRequirements?: JobRequirements;
 }
