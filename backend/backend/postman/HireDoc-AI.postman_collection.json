@@ -1,0 +1,465 @@
+{
+  "info": {
+    "_postman_id": "hiredoc-ai-collection",
+    "name": "HireDoc AI API",
+    "description": "Express + MongoDB backend for HireDoc AI.\n\n**Setup**\n1. Import this collection + `HireDoc-AI.postman_environment.json`\n2. Select the environment\n3. Run **Auth → Send OTP** then **Verify OTP** (token auto-saves)\n4. Run requests in order within each folder\n\n**Base URL:** `http://localhost:5000` (default)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" },
+    { "key": "jobId", "value": "" },
+    { "key": "jobSlug", "value": "" },
+    { "key": "applicationId", "value": "" },
+    { "key": "questionId", "value": "" },
+    { "key": "recruiterEmail", "value": "recruiter@example.com" },
+    { "key": "lastOtp", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('OK status', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{recruiterEmail}}\",\n  \"organization_name\": \"Acme Labs\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/send-otp"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.dev_otp) {",
+                  "  pm.collectionVariables.set('lastOtp', json.dev_otp);",
+                  "  console.log('OTP saved to collection variable lastOtp:', json.dev_otp);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{recruiterEmail}}\",\n  \"otp\": \"{{lastOtp}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/verify-otp"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Has JWT', () => pm.expect(json.token).to.be.a('string'));",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "  pm.environment.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has recruiter', () => {",
+                  "  pm.expect(pm.response.json().recruiter).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "Create Job",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Backend Engineer\",\n  \"company\": \"Acme Labs\",\n  \"location\": \"San Francisco, CA (Hybrid)\",\n  \"job_type\": \"full-time\",\n  \"description\": \"We are looking for a Senior Backend Engineer to design and build scalable APIs with Node.js and MongoDB. You will own services from design through deployment, collaborate with product and frontend teams, and mentor junior engineers. Requirements include 5+ years backend experience, strong TypeScript skills, and experience with cloud infrastructure.\",\n  \"expires_at\": \"2026-12-31T23:59:59.000Z\",\n  \"public_slug\": \"senior-backend-acme\"\n}"
+            },
+            "url": "{{baseUrl}}/api/jobs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.job) {",
+                  "  pm.collectionVariables.set('jobId', json.job._id);",
+                  "  pm.collectionVariables.set('jobSlug', json.job.public_slug);",
+                  "  pm.environment.set('jobId', json.job._id);",
+                  "  pm.environment.set('jobSlug', json.job.public_slug);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/jobs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const jobs = pm.response.json().jobs;",
+                  "if (jobs && jobs.length > 0 && !pm.collectionVariables.get('jobId')) {",
+                  "  pm.collectionVariables.set('jobId', jobs[0]._id);",
+                  "  pm.collectionVariables.set('jobSlug', jobs[0].public_slug);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Job By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/jobs/{{jobId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const questions = pm.response.json().job?.questions;",
+                  "if (questions && questions.length > 0) {",
+                  "  pm.collectionVariables.set('questionId', questions[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Job",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": \"Remote\",\n  \"title\": \"Senior Backend Engineer (Remote)\"\n}"
+            },
+            "url": "{{baseUrl}}/api/jobs/{{jobId}}"
+          }
+        },
+        {
+          "name": "Publish Job",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/jobs/{{jobId}}/publish"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Published', () => {",
+                  "  pm.expect(pm.response.json().job.is_published).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Public Job (no auth)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/jobs/public/{{jobSlug}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const questions = pm.response.json().job?.questions;",
+                  "if (questions && questions.length > 0) {",
+                  "  pm.collectionVariables.set('questionId', questions[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Job",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/jobs/{{jobId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questions",
+      "item": [
+        {
+          "name": "Set Questions (replace all)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questions\": [\n    \"Why are you interested in this role?\",\n    \"Describe a backend system you designed end-to-end.\",\n    \"What is your experience with MongoDB and Node.js?\",\n    \"What is your expected start date?\"\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/questions/{{jobId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const questions = pm.response.json().questions;",
+                  "if (questions && questions.length > 0) {",
+                  "  pm.collectionVariables.set('questionId', questions[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Questions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/questions/{{jobId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const questions = pm.response.json().questions;",
+                  "if (questions && questions.length > 0) {",
+                  "  pm.collectionVariables.set('questionId', questions[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Submit Application (multipart)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "candidate_name", "value": "Jane Candidate", "type": "text" },
+                { "key": "candidate_email", "value": "jane.candidate@example.com", "type": "text" },
+                {
+                  "key": "answers",
+                  "value": "{\n  \"{{questionId}}\": \"I am passionate about building scalable APIs and have 6 years of Node.js experience.\"\n}",
+                  "type": "text",
+                  "description": "JSON string: { \"<question_id>\": \"answer\" }"
+                },
+                {
+                  "key": "cv",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select a PDF file (≤ 5 MB)"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/applications/apply/{{jobSlug}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.application_id) {",
+                  "  pm.collectionVariables.set('applicationId', json.application_id);",
+                  "  pm.environment.set('applicationId', json.application_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Applications (ranked)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/applications/job/{{jobId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const apps = pm.response.json().applications;",
+                  "if (apps && apps.length > 0) {",
+                  "  pm.collectionVariables.set('applicationId', apps[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Application Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/applications/job/{{jobId}}/{{applicationId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const app = pm.response.json().application;",
+                  "if (app?.ai_summary) {",
+                  "  console.log('AI score:', app.score, 'recommendation:', app.ai_recommendation);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "Analyze Job Description",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/ai/analyze-jd/{{jobId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const analysis = pm.response.json().analysis;",
+                  "if (analysis) {",
+                  "  console.log('Required skills:', analysis.required_skills);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
