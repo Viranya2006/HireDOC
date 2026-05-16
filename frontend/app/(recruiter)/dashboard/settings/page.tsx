@@ -2,12 +2,49 @@
 
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import type { CompanySize } from "@/lib/api/auth";
+import { ApiError } from "@/lib/api/client";
 import {
   useAuth,
   getAuthErrorMessage,
 } from "@/providers/auth-provider";
+
+const INDUSTRIES = [
+  "Technology",
+  "Finance",
+  "Healthcare",
+  "Education",
+  "Other",
+] as const;
+
+const COMPANY_SIZES: CompanySize[] = [
+  "1-10",
+  "11-50",
+  "51-200",
+  "201-500",
+  "500+",
+];
+
+function getInitials(
+  fullName: string,
+  organizationName: string,
+  email: string,
+): string {
+  const name =
+    fullName.trim() ||
+    organizationName.trim() ||
+    email.split("@")[0] ||
+    "R";
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -16,8 +53,36 @@ export default function SettingsPage() {
     recruiter,
     changePassword,
     sendPasswordReset,
+    updateRecruiter,
     isConfigured,
   } = useAuth();
+
+  const [fullName, setFullName] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [phone, setPhone] = useState("");
+  const [organizationName, setOrganizationName] = useState("");
+  const [website, setWebsite] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [companySize, setCompanySize] = useState<CompanySize | "">("");
+  const [companyDescription, setCompanyDescription] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
+
+  const hydratedRecruiterId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!recruiter?._id || hydratedRecruiterId.current === recruiter._id) {
+      return;
+    }
+    hydratedRecruiterId.current = recruiter._id;
+    setFullName(recruiter.full_name ?? "");
+    setJobTitle(recruiter.job_title ?? "");
+    setPhone(recruiter.phone ?? "");
+    setOrganizationName(recruiter.organization_name ?? "");
+    setWebsite(recruiter.website ?? "");
+    setIndustry(recruiter.industry ?? "");
+    setCompanySize(recruiter.company_size ?? "");
+    setCompanyDescription(recruiter.company_description ?? "");
+  }, [recruiter]);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -32,6 +97,41 @@ export default function SettingsPage() {
     (p) => p.providerId === "password",
   );
   const accountEmail = firebaseUser?.email ?? recruiter?.email ?? "";
+  const initials = getInitials(fullName, organizationName, accountEmail);
+
+  const handleSaveChanges = async () => {
+    if (activeTab === "notifications") {
+      toast.message("Notification preferences are coming soon");
+      return;
+    }
+
+    setSaveLoading(true);
+    try {
+      if (activeTab === "profile") {
+        await updateRecruiter({
+          full_name: fullName.trim(),
+          job_title: jobTitle.trim(),
+          phone: phone.trim(),
+        });
+        toast.success("Profile saved");
+      } else if (activeTab === "company") {
+        await updateRecruiter({
+          organization_name: organizationName.trim(),
+          website: website.trim(),
+          industry: industry.trim(),
+          company_size: companySize || "",
+          company_description: companyDescription.trim(),
+        });
+        toast.success("Company details saved");
+      }
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Failed to save changes";
+      toast.error(message);
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,9 +188,10 @@ export default function SettingsPage() {
     { id: "profile", label: "Profile" },
     { id: "company", label: "Company" },
     { id: "notifications", label: "Notifications" },
-    { id: "integrations", label: "Integrations" },
-    { id: "billing", label: "Billing" },
   ];
+
+  const saveDisabled =
+    saveLoading || activeTab === "notifications";
 
   return (
     <>
@@ -99,8 +200,13 @@ export default function SettingsPage() {
           <h1 className="font-display font-extrabold text-[#0F0F0F] text-xl">
             Settings
           </h1>
-          <button className="px-5 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-sm text-[#0F0F0F] hover:scale-[1.02] transition-transform">
-            Save Changes
+          <button
+            type="button"
+            onClick={handleSaveChanges}
+            disabled={saveDisabled}
+            className="px-5 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-sm text-[#0F0F0F] hover:scale-[1.02] transition-transform disabled:opacity-50"
+          >
+            {saveLoading ? "Saving…" : "Save Changes"}
           </button>
         </header>
 
@@ -137,14 +243,17 @@ export default function SettingsPage() {
             >
               {/* Profile Card */}
               <div className="bg-white rounded-2xl border border-[#E8E2D9] p-8">
-                <h2 className="font-display font-bold text-[#0F0F0F] text-lg mb-6">
+                <h2 className="font-display font-bold text-[#0F0F0F] text-lg mb-2">
                   Personal Information
                 </h2>
+                <p className="font-body text-sm text-[#6B6560] mb-6">
+                  Optional — you can complete this anytime.
+                </p>
                 <div className="flex items-start gap-8">
                   <div className="relative">
                     <div className="w-24 h-24 rounded-full bg-[#0057FF] flex items-center justify-center">
                       <span className="font-display font-bold text-white text-3xl">
-                        SC
+                        {initials}
                       </span>
                     </div>
                     <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#C8F135] rounded-full flex items-center justify-center hover:scale-105 transition-transform">
@@ -170,8 +279,10 @@ export default function SettingsPage() {
                       </label>
                       <input
                         type="text"
-                        defaultValue="Sarah Chen"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Your full name"
+                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                     <div>
@@ -180,8 +291,9 @@ export default function SettingsPage() {
                       </label>
                       <input
                         type="email"
-                        defaultValue="sarah@acmecorp.com"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        value={accountEmail}
+                        readOnly
+                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#6B6560] cursor-not-allowed focus:outline-none"
                       />
                     </div>
                     <div>
@@ -190,8 +302,10 @@ export default function SettingsPage() {
                       </label>
                       <input
                         type="text"
-                        defaultValue="Head of Talent Acquisition"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        value={jobTitle}
+                        onChange={(e) => setJobTitle(e.target.value)}
+                        placeholder="Your job title"
+                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                     <div>
@@ -200,8 +314,10 @@ export default function SettingsPage() {
                       </label>
                       <input
                         type="tel"
-                        defaultValue="+1 (555) 987-6543"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Your phone number"
+                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                   </div>
@@ -285,7 +401,7 @@ export default function SettingsPage() {
                         disabled={passwordLoading}
                         className="px-6 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-sm text-[#0F0F0F] hover:scale-[1.02] transition-transform disabled:opacity-50"
                       >
-                        {passwordLoading ? "Updatingâ€¦" : "Update password"}
+                        {passwordLoading ? "Updating…" : "Update password"}
                       </button>
                     </div>
                   </form>
@@ -307,7 +423,7 @@ export default function SettingsPage() {
                       className="px-5 py-2.5 border border-[#E8E2D9] rounded-full font-display font-semibold text-sm text-[#0F0F0F] hover:border-[#0F0F0F] transition-colors disabled:opacity-50"
                     >
                       {resetEmailLoading
-                        ? "Sendingâ€¦"
+                        ? "Sending…"
                         : "Send password setup email"}
                     </button>
                   </div>
@@ -333,8 +449,10 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue="Acme Corp"
-                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                    value={organizationName}
+                    onChange={(e) => setOrganizationName(e.target.value)}
+                    placeholder="Company name"
+                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                   />
                 </div>
                 <div>
@@ -343,7 +461,9 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="url"
-                    defaultValue="https://acmecorp.com"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://example.com"
                     className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
                   />
                 </div>
@@ -351,24 +471,36 @@ export default function SettingsPage() {
                   <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                     Industry
                   </label>
-                  <select className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors">
-                    <option>Technology</option>
-                    <option>Finance</option>
-                    <option>Healthcare</option>
-                    <option>Education</option>
-                    <option>Other</option>
+                  <select
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                  >
+                    <option value="">Select industry</option>
+                    {INDUSTRIES.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                     Company Size
                   </label>
-                  <select className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors">
-                    <option>1-10</option>
-                    <option>11-50</option>
-                    <option>51-200</option>
-                    <option>201-500</option>
-                    <option>500+</option>
+                  <select
+                    value={companySize}
+                    onChange={(e) =>
+                      setCompanySize(e.target.value as CompanySize | "")
+                    }
+                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                  >
+                    <option value="">Select company size</option>
+                    {COMPANY_SIZES.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="col-span-2">
@@ -377,8 +509,10 @@ export default function SettingsPage() {
                   </label>
                   <textarea
                     rows={4}
-                    defaultValue="Acme Corp is a leading technology company building innovative solutions for the modern enterprise."
-                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors resize-none"
+                    value={companyDescription}
+                    onChange={(e) => setCompanyDescription(e.target.value)}
+                    placeholder="Brief description of your company"
+                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors resize-none"
                   />
                 </div>
               </div>
@@ -444,163 +578,6 @@ export default function SettingsPage() {
             </motion.div>
           )}
 
-          {activeTab === "integrations" && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="bg-white rounded-2xl border border-[#E8E2D9] p-8"
-            >
-              <h2 className="font-display font-bold text-[#0F0F0F] text-lg mb-6">
-                Connected Integrations
-              </h2>
-              <div className="space-y-4">
-                {[
-                  {
-                    name: "Slack",
-                    desc: "Get notifications in Slack",
-                    connected: true,
-                    color: "#4A154B",
-                  },
-                  {
-                    name: "Google Calendar",
-                    desc: "Sync interviews to your calendar",
-                    connected: true,
-                    color: "#4285F4",
-                  },
-                  {
-                    name: "LinkedIn",
-                    desc: "Import candidate profiles",
-                    connected: false,
-                    color: "#0A66C2",
-                  },
-                  {
-                    name: "Greenhouse",
-                    desc: "Sync with your ATS",
-                    connected: false,
-                    color: "#3AB549",
-                  },
-                ].map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-[#FAFAF8] rounded-xl"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-display font-bold text-sm"
-                        style={{ backgroundColor: item.color }}
-                      >
-                        {item.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-display font-semibold text-sm text-[#0F0F0F]">
-                          {item.name}
-                        </p>
-                        <p className="font-body text-xs text-[#6B6560]">
-                          {item.desc}
-                        </p>
-                      </div>
-                    </div>
-                    {item.connected ? (
-                      <span className="px-3 py-1 bg-[#00C896]/10 text-[#00C896] rounded-full font-display font-semibold text-xs">
-                        Connected
-                      </span>
-                    ) : (
-                      <button className="px-4 py-2 border border-[#E8E2D9] rounded-full font-display font-semibold text-xs text-[#6B6560] hover:border-[#0F0F0F] hover:text-[#0F0F0F] transition-colors">
-                        Connect
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === "billing" && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="space-y-6"
-            >
-              {/* Current Plan */}
-              <div className="bg-white rounded-2xl border border-[#E8E2D9] p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-display font-bold text-[#0F0F0F] text-lg">
-                    Current Plan
-                  </h2>
-                  <span className="px-3 py-1 bg-[#C8F135] text-[#0F0F0F] rounded-full font-display font-semibold text-xs">
-                    Pro
-                  </span>
-                </div>
-                <div className="flex items-end gap-2 mb-4">
-                  <span className="font-display font-extrabold text-[#0F0F0F] text-4xl">
-                    $99
-                  </span>
-                  <span className="font-body text-[#6B6560] mb-1">/month</span>
-                </div>
-                <ul className="space-y-2 mb-6">
-                  {[
-                    "Unlimited job postings",
-                    "Up to 500 candidates/month",
-                    "MiniMax AI screening",
-                    "Team collaboration",
-                    "Priority support",
-                  ].map((feature, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center gap-2 font-body text-sm text-[#0F0F0F]"
-                    >
-                      <svg
-                        className="w-4 h-4 text-[#00C896]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <button className="px-4 py-2 border border-[#E8E2D9] rounded-full font-display font-semibold text-sm text-[#6B6560] hover:border-[#0F0F0F] hover:text-[#0F0F0F] transition-colors">
-                  Upgrade to Enterprise
-                </button>
-              </div>
-
-              {/* Payment Method */}
-              <div className="bg-white rounded-2xl border border-[#E8E2D9] p-8">
-                <h2 className="font-display font-bold text-[#0F0F0F] text-lg mb-6">
-                  Payment Method
-                </h2>
-                <div className="flex items-center justify-between p-4 bg-[#FAFAF8] rounded-xl">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-8 bg-[#1A1F71] rounded flex items-center justify-center">
-                      <span className="font-display font-bold text-white text-xs">
-                        VISA
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-mono text-sm text-[#0F0F0F]">
-                        **** **** **** 4242
-                      </p>
-                      <p className="font-body text-xs text-[#6B6560]">
-                        Expires 12/2025
-                      </p>
-                    </div>
-                  </div>
-                  <button className="px-4 py-2 border border-[#E8E2D9] rounded-full font-display font-semibold text-xs text-[#6B6560] hover:border-[#0F0F0F] hover:text-[#0F0F0F] transition-colors">
-                    Update
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
     </>
   );

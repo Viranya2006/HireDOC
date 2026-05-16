@@ -75,7 +75,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   };
 
   const displayName =
-    recruiter?.organization_name ||
+    recruiter?.full_name?.trim() ||
+    recruiter?.organization_name?.trim() ||
     recruiter?.email?.split("@")[0] ||
     "Recruiter";
   const initials = displayName

@@ -33,7 +33,9 @@ import {
 import {
   exchangeFirebaseSession,
   getMe,
+  updateRecruiter as patchRecruiter,
   type Recruiter,
+  type UpdateRecruiterBody,
 } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase/client";
@@ -53,6 +55,7 @@ interface AuthContextValue {
   resendVerification: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateRecruiter: (body: UpdateRecruiterBody) => Promise<Recruiter>;
   signOut: () => Promise<void>;
 }
 
@@ -288,6 +291,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [configured],
   );
 
+  const updateRecruiter = useCallback(async (body: UpdateRecruiterBody) => {
+    const { recruiter: updated } = await patchRecruiter(body);
+    setRecruiter(updated);
+    return updated;
+  }, []);
+
   const signOut = useCallback(async () => {
     clearToken();
     clearSessionCookie();
@@ -309,6 +318,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resendVerification,
         sendPasswordReset,
         changePassword,
+        updateRecruiter,
         signOut,
       }}
     >
