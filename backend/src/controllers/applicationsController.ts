@@ -4,6 +4,7 @@ import { Question } from "../models/Question";
 import { Application } from "../models/Application";
 import { extractTextFromPDF } from "../services/cvParserService";
 import { evaluateCandidate } from "../services/minimaxService";
+import { calculateFitScore } from "../services/scoringService";
 import {
   getCvJobId,
   openCvReadStream,
@@ -92,10 +93,17 @@ async function submitApplicationHandler(req: Request, res: Response) {
           question_text: q.question_text,
         })),
       );
+      const fitScore = calculateFitScore(aiResult.model_evidence);
+      const aiSummary = {
+        ...aiResult,
+        overall_score: fitScore.overall_score,
+        grade: fitScore.grade,
+        fit_breakdown: fitScore.fit_breakdown,
+      };
 
       await Application.findByIdAndUpdate(application._id, {
-        score: aiResult.overall_score,
-        ai_summary: aiResult,
+        score: fitScore.overall_score,
+        ai_summary: aiSummary,
         ai_recommendation: aiResult.recommendation,
       });
     } catch (err) {
