@@ -10,9 +10,11 @@ import {
 } from "react";
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
   sendEmailVerification,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
@@ -37,6 +39,7 @@ interface AuthContextValue {
   loading: boolean;
   isConfigured: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: (organizationName?: string) => Promise<void>;
   signUp: (
     email: string,
     password: string,
@@ -122,6 +125,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsub();
   }, [configured]);
 
+  const signInWithGoogle = useCallback(
+    async (organizationName?: string) => {
+      if (!configured) {
+        throw new Error(
+          "Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* to .env.local",
+        );
+      }
+      const auth = getFirebaseAuth();
+      if (!auth) throw new Error("Firebase not initialized");
+
+      if (organizationName?.trim()) {
+        localStorage.setItem(PENDING_ORG_KEY, organizationName.trim());
+      }
+
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const credential = await signInWithPopup(auth, provider);
+
+      const pendingOrg = localStorage.getItem(PENDING_ORG_KEY) ?? undefined;
+      const r = await syncAppSession(
+        credential.user,
+        pendingOrg || organizationName?.trim() || undefined,
+      );
+      localStorage.removeItem(PENDING_ORG_KEY);
+      setRecruiter(r);
+    },
+    [configured],
+  );
+
   const signIn = useCallback(async (email: string, password: string) => {
     if (!configured) {
       throw new Error(
@@ -196,6 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isConfigured: configured,
         signIn,
+        signInWithGoogle,
         signUp,
         resendVerification,
         signOut,
@@ -229,6 +262,20 @@ export function getAuthErrorMessage(err: unknown): string {
     }
     if (err.message.includes("auth/weak-password")) {
       return "Password should be at least 6 characters";
+    }
+    if (err.message.includes("auth/popup-closed-by-user")) {
+      return "Sign-in cancelled";
+    }
+    if (err.message.includes("auth/popup-blocked")) {
+      return "Popup blocked. Allow popups for this site and try again.";
+    }
+    if (
+      err.message.includes("auth/account-exists-with-different-credential")
+    ) {
+      return "An account with this email already exists. Sign in with email and password instead.";
+    }
+    if (err.message.includes("auth/operation-not-allowed")) {
+      return "Google sign-in is not enabled. In Firebase Console → Authentication → Sign-in method, enable Google.";
     }
     return err.message;
   }
