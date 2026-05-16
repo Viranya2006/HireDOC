@@ -39,7 +39,15 @@ app.use(async (req, res, next) => {
   }
 });
 
-app.get("/health", (_req, res) => res.json({ status: "ok" }));
+app.get("/health", async (_req, res, next) => {
+  try {
+    await connectDB();
+    res.json({ status: "ok" });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/questions", questionRoutes);
@@ -47,22 +55,23 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/ai", aiRoutes);
 app.use(errorHandler);
 
-async function bootstrap() {
-  await connectDB();
-  const firebaseApp = getFirebaseAdminApp();
-  if (firebaseApp) {
-    console.log("Firebase Admin initialized");
-  } else if (env.nodeEnv === "development") {
-    console.warn(
-      "Firebase Admin not configured — set FIREBASE_SERVICE_ACCOUNT_JSON for auth",
-    );
-  }
-
-  if (!process.env.VERCEL) {
-    app.listen(PORT, () => console.log(`HireDoc AI running on port ${PORT}`));
-  }
+if (!process.env.VERCEL) {
+  void connectDB()
+    .then(() => {
+      const firebaseApp = getFirebaseAdminApp();
+      if (firebaseApp) {
+        console.log("Firebase Admin initialized");
+      } else if (env.nodeEnv === "development") {
+        console.warn(
+          "Firebase Admin not configured — set FIREBASE_SERVICE_ACCOUNT_JSON for auth",
+        );
+      }
+      app.listen(PORT, () => console.log(`HireDoc AI running on port ${PORT}`));
+    })
+    .catch((err) => {
+      console.error("Failed to start server:", err);
+      process.exit(1);
+    });
 }
-
-void bootstrap();
 
 export default app;
