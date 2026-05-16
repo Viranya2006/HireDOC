@@ -82,7 +82,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <div className="p-5">
         <Link href="/" className="flex items-center gap-3" onClick={onNavigate}>
           <Logo size="lg" />
-          <span className="font-display font-bold text-[#0F0F0F] text-lg">
+          <span className="font-display font-bold text-[#0F0F0F] text-base">
             HireDoc AI
           </span>
         </Link>
