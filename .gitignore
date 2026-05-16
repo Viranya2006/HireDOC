@@ -1,0 +1,18 @@
+# Dependencies & build
+node_modules/
+.next/
+out/
+dist/
+
+# Env
+.env*.local
+
+# OS & IDE
+.DS_Store
+*.log
+.cursor/
+
+# Vercel / v0
+.vercel/
+.v0-trash/
+__v0_*
