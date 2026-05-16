@@ -36,6 +36,15 @@ function recommendationToStatus(
   return "New";
 }
 
+function applicationStatus(
+  recruiterStatus: string | null | undefined,
+  aiRecommendation: string | null | undefined,
+): CandidateStatus {
+  if (recruiterStatus === "shortlisted") return "Shortlisted";
+  if (recruiterStatus === "rejected") return "Rejected";
+  return recommendationToStatus(aiRecommendation);
+}
+
 export interface BackendQuestion {
   _id: string;
   question_text: string;
@@ -74,6 +83,7 @@ export interface BackendApplicationListItem {
   candidate_email: string;
   score: number | null;
   ai_recommendation: string | null;
+  recruiter_status?: "shortlisted" | "rejected" | null;
   created_at: string;
 }
 
@@ -99,6 +109,7 @@ export interface BackendApplicationDetail {
   score: number | null;
   ai_summary: BackendAISummary | null;
   ai_recommendation: string | null;
+  recruiter_status?: "shortlisted" | "rejected" | null;
   created_at: string;
 }
 
@@ -177,7 +188,7 @@ export function mapApplicationListItemToCandidate(
     role: "Applicant",
     score: app.score ?? 0,
     skills: [],
-    status: recommendationToStatus(app.ai_recommendation),
+    status: applicationStatus(app.recruiter_status, app.ai_recommendation),
     appliedAgo: formatAppliedAgo(app.created_at),
     matchingSkills: [],
     gaps: [],
@@ -202,6 +213,7 @@ export function mapApplicationDetailToCandidate(
       candidate_email: app.candidate_email,
       score: app.score,
       ai_recommendation: app.ai_recommendation,
+      recruiter_status: app.recruiter_status,
       created_at: app.created_at,
     },
     jobId,

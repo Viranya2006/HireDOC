@@ -53,6 +53,24 @@ export interface SubmitApplicationOptions extends SubmitApplicationInput {
   answerMap: Record<string, string>;
 }
 
+export type CandidateDecision = "shortlisted" | "rejected";
+
+export async function updateCandidateDecision(
+  jobId: string,
+  applicationId: string,
+  decision: CandidateDecision,
+): Promise<Candidate> {
+  const { application } = await apiFetch<ApplicationDetailResponse>(
+    `/api/applications/job/${jobId}/${applicationId}/decision`,
+    {
+      method: "POST",
+      auth: true,
+      body: { decision },
+    },
+  );
+  return mapApplicationDetailToCandidate(application, jobId);
+}
+
 export async function submitApplication(
   input: SubmitApplicationOptions,
 ): Promise<void> {

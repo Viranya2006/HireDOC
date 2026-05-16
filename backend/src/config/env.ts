@@ -24,7 +24,22 @@ export const env = {
   minimaxGroupId: (process.env.MINIMAX_GROUP_ID ?? "").trim(),
   firebaseServiceAccountJson:
     process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim() ?? "",
+  smtpHost: process.env.SMTP_HOST?.trim() || "smtp.gmail.com",
+  smtpPort: Number(process.env.SMTP_PORT) || 587,
+  smtpUser: process.env.SMTP_USER?.trim() ?? "",
+  smtpPass: process.env.SMTP_PASS?.trim() ?? "",
+  emailFrom: process.env.EMAIL_FROM?.trim() ?? "",
 } as const;
+
+export function isSmtpConfigured(): boolean {
+  return Boolean(env.smtpUser && env.smtpPass);
+}
+
+export function getEmailFrom(): string {
+  if (env.emailFrom) return env.emailFrom;
+  if (env.smtpUser) return `HireDoc <${env.smtpUser}>`;
+  return "HireDoc <noreply@hiredoc.local>";
+}
 
 export function getFirebaseServiceAccount(): Record<string, unknown> | null {
   const raw = env.firebaseServiceAccountJson;
