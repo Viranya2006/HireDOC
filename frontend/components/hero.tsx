@@ -8,7 +8,7 @@ const headlineLines = ['Hire Smarter.', 'Screen Faster.']
 
 export function Hero() {
   return (
-    <section className="h-[calc(100dvh-4rem)] max-h-[920px] flex items-center overflow-hidden bg-[#F6F7F9]">
+    <section className="h-[calc(100dvh-4rem)] max-h-[920px] flex items-center overflow-hidden bg-[#F5F0E8]">
       <div className="max-w-[1200px] mx-auto px-6 w-full py-6 lg:py-8">
         <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 xl:gap-8 items-center">
           {/* Left Column */}
