@@ -1,74 +1,119 @@
 import type { CreateJobInput, Job, JobRequirements } from "@/lib/types/job";
-import { MOCK_JOBS } from "@/lib/mocks/jobs";
-import { delay } from "./delay";
-
-let jobsStore: Job[] = [...MOCK_JOBS];
+import { apiFetch } from "./client";
+import {
+  mapJobFromBackend,
+  type BackendJob,
+} from "./mappers";
 
 const DRAFT_KEY = "hiredoc_job_draft";
 
+interface JobsListResponse {
+  jobs: BackendJob[];
+}
+
+interface JobResponse {
+  job: BackendJob;
+}
+
+interface PublishResponse {
+  job: BackendJob;
+  public_url: string;
+}
+
+function defaultExpiresAt(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return d.toISOString();
+}
+
 export async function getJobs(): Promise<Job[]> {
-  await delay();
-  return [...jobsStore];
+  const { jobs } = await apiFetch<JobsListResponse>("/api/jobs", {
+    auth: true,
+  });
+  return jobs.map((j) =>
+    mapJobFromBackend(j, { applicationCount: j.application_count }),
+  );
 }
 
 export async function getJobById(id: string): Promise<Job | null> {
-  await delay(150);
-  return jobsStore.find((j) => j.id === id) ?? null;
+  try {
+    const { job } = await apiFetch<JobResponse>(`/api/jobs/${id}`, {
+      auth: true,
+    });
+    return mapJobFromBackend(job);
+  } catch {
+    return null;
+  }
 }
 
 export async function getJobBySlug(slug: string): Promise<Job | null> {
-  await delay(150);
-  return jobsStore.find((j) => j.slug === slug || j.id === slug) ?? null;
+  try {
+    const { job } = await apiFetch<JobResponse>(
+      `/api/jobs/public/${encodeURIComponent(slug)}`,
+    );
+    return mapJobFromBackend(job);
+  } catch {
+    return null;
+  }
 }
 
 export async function createJob(input: CreateJobInput): Promise<Job> {
-  await delay();
-  const job: Job = {
-    id: `job-${Date.now()}`,
-    slug: input.slug,
-    title: input.title,
-    company: input.company,
-    location: input.location,
-    type: input.type,
-    description: input.description,
-    questions: input.questions.map((text, i) => ({
-      id: `q-${i}`,
-      text,
-    })),
-    status: "draft",
-    applicants: 0,
-    shortlisted: 0,
-    expiresAt: input.expiresAt,
-  };
-  jobsStore = [job, ...jobsStore];
-  return job;
+  const expiresAt = input.expiresAt
+    ? new Date(input.expiresAt).toISOString()
+    : defaultExpiresAt();
+
+  const { job } = await apiFetch<JobResponse>("/api/jobs", {
+    method: "POST",
+    auth: true,
+    body: {
+      title: input.title,
+      company: input.company,
+      location: input.location || "Remote",
+      job_type: input.type,
+      description: input.description,
+      expires_at: expiresAt,
+      public_slug: input.slug,
+    },
+  });
+
+  return mapJobFromBackend(job);
 }
 
 export async function publishJob(jobId: string): Promise<Job | null> {
-  await delay();
-  const index = jobsStore.findIndex((j) => j.id === jobId);
-  if (index === -1) return null;
-  jobsStore[index] = {
-    ...jobsStore[index],
-    status: "active",
-    postedAt: new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-  };
-  return jobsStore[index];
+  try {
+    const { job } = await apiFetch<PublishResponse>(
+      `/api/jobs/${jobId}/publish`,
+      { method: "POST", auth: true },
+    );
+    return mapJobFromBackend(job);
+  } catch {
+    return null;
+  }
 }
 
 export async function updateJobRequirements(
   jobId: string,
-  requirements: JobRequirements
+  requirements: JobRequirements,
 ): Promise<Job | null> {
-  await delay();
-  const index = jobsStore.findIndex((j) => j.id === jobId);
-  if (index === -1) return null;
-  jobsStore[index] = { ...jobsStore[index], aiRequirements: requirements };
-  return jobsStore[index];
+  try {
+    const { job } = await apiFetch<JobResponse>(`/api/jobs/${jobId}`, {
+      method: "PUT",
+      auth: true,
+      body: {
+        ai_requirements: {
+          required_skills: requirements.requiredSkills,
+          nice_to_have_skills: requirements.niceToHaveSkills,
+          responsibilities: requirements.responsibilities,
+          experience_level: requirements.experienceLevel,
+          must_have_criteria: requirements.mustHaveCriteria,
+          screening_questions: requirements.screeningQuestions,
+        },
+      },
+    });
+    return mapJobFromBackend(job);
+  } catch {
+    return null;
+  }
 }
 
 export function saveJobDraft(draft: Partial<CreateJobInput>): void {

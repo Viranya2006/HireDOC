@@ -13,6 +13,8 @@ import {
   clearJobDraft,
 } from "@/lib/api/jobs";
 import { analyzeJD } from "@/lib/api/minimax";
+import { setJobQuestions } from "@/lib/api/questions";
+import { ApiError } from "@/lib/api/client";
 import type { JobType } from "@/lib/types/job";
 import { ROUTES } from "@/lib/constants/routes";
 import { toast } from "sonner";
@@ -24,6 +26,8 @@ export default function JobCreationPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [draftJobId, setDraftJobId] = useState<string | null>(null);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -44,37 +48,66 @@ export default function JobCreationPage() {
       .replace(/(^-|-$)/g, "");
 
   const handleAnalyze = async () => {
-    if (!form.description.trim()) {
-      toast.error("Add a job description first");
+    if (!form.title.trim() || !form.company.trim()) {
+      toast.error("Add job title and company on step 1");
+      return;
+    }
+    if (form.description.trim().length < 50) {
+      toast.error("Job description must be at least 50 characters");
       return;
     }
     setAnalyzing(true);
     try {
-      const result = await analyzeJD(form.description);
-      setForm((f) => ({
-        ...f,
-        questions: result.requirements.screeningQuestions,
-      }));
+      const slug = form.slug || slugify(form.title);
+      let jobId = draftJobId;
+      if (!jobId) {
+        const job = await createJob({
+          ...form,
+          slug,
+          questions: [],
+        });
+        jobId = job.id;
+        setDraftJobId(jobId);
+      }
+
+      const result = await analyzeJD(jobId);
+      const questions = result.requirements.screeningQuestions;
+      if (questions.length > 0) {
+        await setJobQuestions(jobId, questions);
+      }
+      setForm((f) => ({ ...f, questions, slug }));
       setStep(2);
       toast.success("MiniMax analysis complete");
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Analysis failed",
+      );
     } finally {
       setAnalyzing(false);
     }
   };
 
   const handlePublish = async () => {
-    const slug = form.slug || slugify(form.title);
-    const job = await createJob({
-      ...form,
-      slug,
-      questions: form.questions,
-    });
-    const published = await publishJob(job.id);
-    if (published) {
-      clearJobDraft();
-      setPublishedSlug(published.slug);
-      setStep(3);
-      toast.success("Job published!");
+    if (!draftJobId) {
+      toast.error("Complete analysis before publishing");
+      return;
+    }
+    setPublishing(true);
+    try {
+      const published = await publishJob(draftJobId);
+      if (published) {
+        clearJobDraft();
+        setPublishedSlug(published.slug);
+        toast.success("Job published!");
+      } else {
+        toast.error("Failed to publish job");
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to publish",
+      );
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -282,9 +315,10 @@ export default function JobCreationPage() {
             <button
               type="button"
               onClick={handlePublish}
-              className="px-8 py-4 bg-[#C8F135] rounded-full font-display font-semibold text-lg"
+              disabled={publishing || !draftJobId}
+              className="px-8 py-4 bg-[#C8F135] rounded-full font-display font-semibold text-lg disabled:opacity-50"
             >
-              Publish job
+              {publishing ? "Publishing…" : "Publish job"}
             </button>
           </div>
         )}

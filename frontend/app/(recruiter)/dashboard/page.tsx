@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { StatCards } from "@/components/dashboard/stat-cards";
@@ -16,55 +16,99 @@ import { ROUTES } from "@/lib/constants/routes";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
-  const jobId = searchParams.get("jobId") || "job-1";
+  const jobId = searchParams.get("jobId") || "";
 
   const [job, setJob] = useState<Job | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([getJobById(jobId), getCandidatesForJob(jobId)]).then(
-      ([jobData, candidateList]) => {
-        setJob(jobData);
-        setCandidates(candidateList);
-        const defaultCandidate =
-          candidateList.find((c) => c.name === "Alex Kim") ??
-          candidateList[0] ??
-          null;
-        setSelectedCandidate(defaultCandidate);
-        setLoading(false);
+    if (!jobId) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setInterval> | undefined;
+
+    const load = async () => {
+      const [jobData, candidateList] = await Promise.all([
+        getJobById(jobId),
+        getCandidatesForJob(jobId),
+      ]);
+      if (cancelled) return;
+      setJob(jobData);
+      setCandidates(candidateList);
+      setSelectedCandidate((prev) =>
+        prev && candidateList.some((c) => c.id === prev.id)
+          ? prev
+          : (candidateList[0] ?? null),
+      );
+      setLoading(false);
+
+      const pending = candidateList.some((c) => c.score === 0);
+      if (pending && !pollTimer) {
+        pollTimer = setInterval(async () => {
+          const updated = await getCandidatesForJob(jobId);
+          if (cancelled) return;
+          setCandidates(updated);
+          if (!updated.some((c) => c.score === 0) && pollTimer) {
+            clearInterval(pollTimer);
+          }
+        }, 4000);
       }
-    );
+    };
+
+    setLoading(true);
+    load();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearInterval(pollTimer);
+    };
   }, [jobId]);
 
+  const scored = candidates.filter((c) => c.score > 0);
   const stats = {
     totalApplicants: candidates.length,
     avgFitScore:
-      candidates.length > 0
+      scored.length > 0
         ? Math.round(
-            candidates.reduce((acc, c) => acc + c.score, 0) / candidates.length
+            scored.reduce((acc, c) => acc + c.score, 0) / scored.length,
           )
         : 0,
     topScore: {
-      score:
-        candidates.length > 0
-          ? Math.max(...candidates.map((c) => c.score))
-          : 0,
+      score: scored.length > 0 ? Math.max(...scored.map((c) => c.score)) : 0,
       name:
-        candidates.length > 0
-          ? candidates.reduce((prev, curr) =>
-              curr.score > prev.score ? curr : prev
+        scored.length > 0
+          ? scored.reduce((prev, curr) =>
+              curr.score > prev.score ? curr : prev,
             ).name
           : "—",
     },
     appliedToday: candidates.filter(
-      (c) => c.appliedAgo.includes("h") || c.appliedAgo === "just now"
+      (c) => c.appliedAgo.includes("h") || c.appliedAgo === "just now",
     ).length,
   };
+
+  if (!jobId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 p-8">
+        <p className="font-body text-[#6B6560]">
+          Select a job from the sidebar or create one to view candidates.
+        </p>
+        <Link
+          href={ROUTES.jobsNew}
+          className="px-5 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-sm"
+        >
+          Create a job
+        </Link>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -90,6 +134,7 @@ function DashboardContent() {
           >
             <StatCards stats={stats} />
             <CandidateTable
+              jobId={jobId}
               candidates={candidates}
               selectedCandidate={selectedCandidate}
               onSelectCandidate={setSelectedCandidate}
@@ -100,7 +145,7 @@ function DashboardContent() {
             {selectedCandidate && (
               <div className="flex flex-col gap-3 xl:w-[400px] shrink-0">
                 <Link
-                  href={ROUTES.candidate(selectedCandidate.id)}
+                  href={ROUTES.candidate(jobId, selectedCandidate.id)}
                   className="font-body text-sm text-[#0057FF] hover:underline self-end"
                 >
                   Open full brief →

@@ -2,105 +2,80 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
   type ReactNode,
 } from "react";
 import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  type User,
-} from "firebase/auth";
-import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase/client";
+  clearSessionCookie,
+  clearToken,
+  getToken,
+  setSessionCookie,
+  setToken,
+} from "@/lib/auth/session";
+import {
+  getMe,
+  sendOtp as apiSendOtp,
+  verifyOtp as apiVerifyOtp,
+  type Recruiter,
+} from "@/lib/api/auth";
 
 interface AuthContextValue {
-  user: User | null;
+  recruiter: Recruiter | null;
   loading: boolean;
-  isConfigured: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  sendOtp: (email: string, organizationName?: string) => Promise<string | undefined>;
+  verifyOtp: (email: string, otp: string) => Promise<void>;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const DEMO_USER = {
-  uid: "demo-recruiter",
-  email: "recruiter@hiredoc.demo",
-  displayName: "Demo Recruiter",
-} as User;
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [recruiter, setRecruiter] = useState<Recruiter | null>(null);
   const [loading, setLoading] = useState(true);
-  const configured = isFirebaseConfigured();
 
   useEffect(() => {
-    if (!configured) {
-      const demo = localStorage.getItem("hiredoc_demo_session");
-      setUser(demo === "1" ? DEMO_USER : null);
+    const token = getToken();
+    if (!token) {
       setLoading(false);
       return;
     }
 
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
+    getMe()
+      .then(({ recruiter: r }) => setRecruiter(r))
+      .catch(() => {
+        clearToken();
+        clearSessionCookie();
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
-    });
-    return () => unsub();
-  }, [configured]);
+  const sendOtp = useCallback(
+    async (email: string, organizationName?: string) => {
+      const res = await apiSendOtp(email, organizationName);
+      return res.dev_otp;
+    },
+    [],
+  );
 
-  const signIn = async (email: string, password: string) => {
-    if (!configured) {
-      localStorage.setItem("hiredoc_demo_session", "1");
-      setUser(DEMO_USER);
-      return;
-    }
-    const auth = getFirebaseAuth();
-    if (!auth) throw new Error("Firebase not initialized");
-    await signInWithEmailAndPassword(auth, email, password);
-  };
+  const verifyOtp = useCallback(async (email: string, otp: string) => {
+    const { token, recruiter: r } = await apiVerifyOtp(email, otp);
+    setToken(token);
+    setSessionCookie();
+    setRecruiter(r);
+  }, []);
 
-  const signUp = async (email: string, password: string) => {
-    if (!configured) {
-      localStorage.setItem("hiredoc_demo_session", "1");
-      setUser(DEMO_USER);
-      return;
-    }
-    const auth = getFirebaseAuth();
-    if (!auth) throw new Error("Firebase not initialized");
-    await createUserWithEmailAndPassword(auth, email, password);
-  };
-
-  const signOut = async () => {
-    if (!configured) {
-      localStorage.removeItem("hiredoc_demo_session");
-      setUser(null);
-      return;
-    }
-    const auth = getFirebaseAuth();
-    if (auth) await firebaseSignOut(auth);
-  };
+  const signOut = useCallback(() => {
+    clearToken();
+    clearSessionCookie();
+    setRecruiter(null);
+  }, []);
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isConfigured: configured,
-        signIn,
-        signUp,
-        signOut,
-      }}
+      value={{ recruiter, loading, sendOtp, verifyOtp, signOut }}
     >
       {children}
     </AuthContext.Provider>
