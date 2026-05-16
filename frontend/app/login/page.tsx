@@ -12,12 +12,14 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || ROUTES.jobsNew;
-  const { signIn, signInWithGoogle, signUp, isConfigured } = useAuth();
+  const { signIn, signInWithGoogle, signUp, sendPasswordReset, isConfigured } =
+    useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,6 +52,23 @@ export default function LoginPage() {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setInfo("");
+    setLoading(true);
+    try {
+      await sendPasswordReset(email);
+      setInfo(
+        "If an account exists for that email, we sent a link to reset your password.",
+      );
+    } catch (err) {
+      setError(getAuthErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setError("");
     setInfo("");
@@ -73,18 +92,24 @@ export default function LoginPage() {
       className="w-full max-w-md bg-white rounded-2xl border border-[rgba(15,15,15,0.10)] p-8 shadow-sm"
     >
       <h1 className="font-display font-extrabold text-2xl text-[#0F0F0F] mb-2">
-        {isSignUp ? "Create account" : "Recruiter sign in"}
+        {isForgotPassword
+          ? "Reset password"
+          : isSignUp
+            ? "Create account"
+            : "Recruiter sign in"}
       </h1>
       <p className="font-body text-sm text-[#6B6560] mb-6">
         {!isConfigured
           ? "Add Firebase keys to .env.local (see .env.example)."
-          : isSignUp
-            ? "Sign up with Google instantly, or use email (verification required)."
-            : "Sign in with Google or your email and password."}
+          : isForgotPassword
+            ? "Enter your email and we will send you a link to choose a new password."
+            : isSignUp
+              ? "Sign up with Google instantly, or use email (verification required)."
+              : "Sign in with Google or your email and password."}
       </p>
 
-      {isSignUp && (
-        <div className="mb-4">
+      {isSignUp && !isForgotPassword && (
+        <motion.div className="mb-4">
           <label className="font-body text-xs font-semibold text-[#6B6560] uppercase tracking-wide">
             Organization (optional)
           </label>
@@ -95,10 +120,10 @@ export default function LoginPage() {
             className="mt-1 w-full px-4 py-3 rounded-xl border border-[rgba(15,15,15,0.15)] font-body text-sm focus:outline-none focus:border-[#C8F135]"
             placeholder="Acme Inc."
           />
-        </div>
+        </motion.div>
       )}
 
-      {isConfigured && (
+      {isConfigured && !isForgotPassword && (
         <>
           <button
             type="button"
@@ -110,21 +135,24 @@ export default function LoginPage() {
             {googleLoading ? "Signing in…" : "Continue with Google"}
           </button>
 
-          <motion.div className="relative my-6">
+          <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <motion.div className="w-full border-t border-[rgba(15,15,15,0.10)]" />
+              <div className="w-full border-t border-[rgba(15,15,15,0.10)]" />
             </div>
             <div className="relative flex justify-center">
               <span className="bg-white px-3 font-body text-xs text-[#6B6560] uppercase tracking-wide">
                 or
               </span>
             </div>
-          </motion.div>
+          </div>
         </>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+      <form
+        onSubmit={isForgotPassword ? handlePasswordReset : handleSubmit}
+        className="space-y-4"
+      >
+        <motion.div>
           <label className="font-body text-xs font-semibold text-[#6B6560] uppercase tracking-wide">
             Email
           </label>
@@ -135,38 +163,58 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="mt-1 w-full px-4 py-3 rounded-xl border border-[rgba(15,15,15,0.15)] font-body text-sm focus:outline-none focus:border-[#C8F135]"
             placeholder="Enter your email..."
+            autoComplete="email"
           />
-        </div>
-        <motion.div>
-          <label className="font-body text-xs font-semibold text-[#6B6560] uppercase tracking-wide">
-            Password
-          </label>
-          <motion.div className="relative mt-1">
-            <input
-              type={showPassword ? "text" : "password"}
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 pr-11 rounded-xl border border-[rgba(15,15,15,0.15)] font-body text-sm focus:outline-none focus:border-[#C8F135]"
-              placeholder="Enter your password..."
-              autoComplete={isSignUp ? "new-password" : "current-password"}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#6B6560] hover:text-[#0F0F0F] transition-colors rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8F135]"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              tabIndex={-1}
-            >
-              {showPassword ? (
-                <EyeOff className="w-5 h-5" aria-hidden />
-              ) : (
-                <Eye className="w-5 h-5" aria-hidden />
-              )}
-            </button>
-          </motion.div>
         </motion.div>
+        {!isForgotPassword && (
+          <div>
+            <label className="font-body text-xs font-semibold text-[#6B6560] uppercase tracking-wide">
+              Password
+            </label>
+            <div className="relative mt-1">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 pr-11 rounded-xl border border-[rgba(15,15,15,0.15)] font-body text-sm focus:outline-none focus:border-[#C8F135]"
+                placeholder="Enter your password..."
+                autoComplete={isSignUp ? "new-password" : "current-password"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#6B6560] hover:text-[#0F0F0F] transition-colors rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8F135]"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" aria-hidden />
+                ) : (
+                  <Eye className="w-5 h-5" aria-hidden />
+                )}
+              </button>
+            </div>
+            {!isSignUp && (
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotPassword(true);
+                    setError("");
+                    setInfo("");
+                    setPassword("");
+                    setShowPassword(false);
+                  }}
+                  className="font-body text-xs text-[#0057FF] hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         {info && (
           <p className="font-body text-sm text-[#00C896] bg-[#00C896]/10 rounded-lg p-3">
             {info}
@@ -182,26 +230,43 @@ export default function LoginPage() {
         >
           {loading
             ? "Please wait…"
-            : isSignUp
-              ? "Create account"
-              : "Sign in"}
+            : isForgotPassword
+              ? "Send reset link"
+              : isSignUp
+                ? "Create account"
+                : "Sign in"}
         </button>
       </form>
 
-      <button
-        type="button"
-        onClick={() => {
-          setIsSignUp(!isSignUp);
-          setError("");
-          setInfo("");
-          setShowPassword(false);
-        }}
-        className="mt-4 w-full font-body text-sm text-[#0057FF] hover:underline"
-      >
-        {isSignUp
-          ? "Already have an account? Sign in"
-          : "Need an account? Sign up"}
-      </button>
+      {isForgotPassword ? (
+        <button
+          type="button"
+          onClick={() => {
+            setIsForgotPassword(false);
+            setError("");
+            setInfo("");
+          }}
+          className="mt-4 w-full font-body text-sm text-[#0057FF] hover:underline"
+        >
+          ← Back to sign in
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setIsSignUp(!isSignUp);
+            setIsForgotPassword(false);
+            setError("");
+            setInfo("");
+            setShowPassword(false);
+          }}
+          className="mt-4 w-full font-body text-sm text-[#0057FF] hover:underline"
+        >
+          {isSignUp
+            ? "Already have an account? Sign in"
+            : "Need an account? Sign up"}
+        </button>
+      )}
 
       <motion.div
         initial={{ opacity: 0 }}

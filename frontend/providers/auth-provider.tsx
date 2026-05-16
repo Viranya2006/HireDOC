@@ -13,11 +13,13 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 import {
   clearSessionCookie,
   clearToken,
@@ -46,6 +48,7 @@ interface AuthContextValue {
     organizationName?: string,
   ) => Promise<void>;
   resendVerification: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -212,6 +215,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await sendEmailVerification(auth.currentUser);
   }, []);
 
+  const sendPasswordReset = useCallback(
+    async (email: string) => {
+      if (!configured) {
+        throw new Error(
+          "Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* to .env.local",
+        );
+      }
+      const auth = getFirebaseAuth();
+      if (!auth) throw new Error("Firebase not initialized");
+
+      const trimmed = email.trim();
+      if (!trimmed) {
+        throw new Error("Enter your email address.");
+      }
+
+      const actionCodeSettings =
+        typeof window !== "undefined"
+          ? { url: `${window.location.origin}/login`, handleCodeInApp: false }
+          : undefined;
+
+      try {
+        await sendPasswordResetEmail(auth, trimmed, actionCodeSettings);
+      } catch (err) {
+        if (
+          err instanceof FirebaseError &&
+          err.code === "auth/user-not-found"
+        ) {
+          return;
+        }
+        throw err;
+      }
+    },
+    [configured],
+  );
+
   const signOut = useCallback(async () => {
     clearToken();
     clearSessionCookie();
@@ -231,6 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         signUp,
         resendVerification,
+        sendPasswordReset,
         signOut,
       }}
     >
@@ -276,6 +315,15 @@ export function getAuthErrorMessage(err: unknown): string {
     }
     if (err.message.includes("auth/operation-not-allowed")) {
       return "Google sign-in is not enabled. In Firebase Console → Authentication → Sign-in method, enable Google.";
+    }
+    if (err.message.includes("auth/invalid-email")) {
+      return "Enter a valid email address";
+    }
+    if (err.message.includes("auth/missing-email")) {
+      return "Enter your email address";
+    }
+    if (err.message.includes("auth/too-many-requests")) {
+      return "Too many attempts. Wait a few minutes and try again.";
     }
     return err.message;
   }
