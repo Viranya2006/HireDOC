@@ -220,7 +220,7 @@ export default function JobCreationPage() {
         <StepIndicator steps={STEPS} currentStep={step} />
       </div>
 
-      <div className="flex-1 overflow-auto p-4 md:p-5">
+      <div className="flex-1 overflow-auto flex flex-col min-h-0 p-4 md:p-6">
         {step === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -306,29 +306,45 @@ export default function JobCreationPage() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-[640px] mx-auto bg-white rounded-xl border p-6"
+            className="flex flex-1 flex-col min-h-0 w-full max-w-[920px] mx-auto"
           >
-            <label className="font-body text-xs font-semibold uppercase text-[#6B6560]">
-              Job description *
-            </label>
-            <textarea
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              rows={12}
-              className="mt-2 w-full px-3 py-2.5 rounded-lg border focus:border-[#C8F135] outline-none font-body text-sm"
-              placeholder="Paste or write the full job description…"
-            />
-            <button
-              type="button"
-              onClick={handleAnalyze}
-              disabled={analyzing}
-              className="mt-4 flex items-center gap-1.5 px-4 py-2.5 bg-[#0057FF] text-white rounded-lg font-body text-xs font-medium disabled:opacity-50"
-            >
-              <Sparkles className="w-4 h-4" />
-              {analyzing ? "Analyzing…" : "Analyze with MiniMax"}
-            </button>
+            <div className="flex flex-1 flex-col min-h-[min(78vh,720px)] bg-white rounded-xl border border-[rgba(15,15,15,0.08)] shadow-[0_1px_3px_rgba(15,15,15,0.06)] p-6 md:p-8 pb-6">
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                <div>
+                  <label
+                    htmlFor="job-description"
+                    className="font-body text-xs font-semibold uppercase tracking-wide text-[#6B6560]"
+                  >
+                    Job description *
+                  </label>
+                  <p className="font-body text-sm text-[#6B6560] mt-2 max-w-[52ch]">
+                    Paste your full posting or bullet list. Aim for clarity on
+                    role, responsibilities, and must-haves — you need at least
+                    50 characters before analysis.
+                  </p>
+                </div>
+                <p className="font-body text-xs text-[#6B6560] tabular-nums shrink-0">
+                  {form.description.trim().length} characters
+                </p>
+              </div>
+              <textarea
+                id="job-description"
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+                spellCheck
+                className="flex-1 min-h-[320px] w-full resize-y rounded-xl border border-[rgba(15,15,15,0.12)] bg-[#F6F7F9] px-4 py-3.5 focus:border-[#C8F135] focus:bg-white focus:ring-2 focus:ring-[rgba(200,241,53,0.35)] focus:outline-none font-body text-sm leading-relaxed text-[#0F0F0F] placeholder:text-[#9a9490] transition-colors"
+                placeholder="Paste or write the full job description…"
+              />
+              <p className="font-body text-xs text-[#9a9490] mt-4">
+                Next: use{" "}
+                <span className="font-semibold text-[#6B6560]">
+                  Analyze with MiniMax
+                </span>{" "}
+                at the bottom to extract skills and screening questions.
+              </p>
+            </div>
           </motion.div>
         )}
 
@@ -362,7 +378,7 @@ export default function JobCreationPage() {
       </div>
 
       {step < 3 && !publishedSlug && (
-        <footer className="bg-white border-t px-4 md:px-6 py-3 flex justify-between max-w-[1000px] mx-auto w-full">
+        <footer className="bg-white border-t border-[rgba(15,15,15,0.08)] px-4 md:px-6 py-4 flex justify-between items-center max-w-[1000px] mx-auto w-full shrink-0">
           <button
             type="button"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
@@ -380,18 +396,37 @@ export default function JobCreationPage() {
               else setStep((s) => Math.min(3, s + 1));
             }}
             disabled={savingQuestions || (step === 1 && analyzing)}
-            className="flex items-center gap-1.5 px-5 py-2.5 bg-[#C8F135] rounded-lg font-semibold text-xs disabled:opacity-50"
+            className={
+              step === 1
+                ? "flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-xs disabled:opacity-50 transition-colors [&:not(:disabled)]:shadow-sm bg-[#0057FF] text-white hover:bg-[#0046cc]"
+                : "flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-xs disabled:opacity-50 transition-colors [&:not(:disabled)]:shadow-sm bg-[#C8F135] text-[#0F0F0F] hover:brightness-[0.96]"
+            }
           >
-            {step === 1
-              ? analyzing
-                ? "Analyzing…"
-                : "Analyze"
-              : step === 2
-                ? savingQuestions
-                  ? "Saving…"
-                  : "Save & continue"
-                : "Continue"}
-            <ArrowRight className="w-4 h-4" />
+            {step === 1 ? (
+              analyzing ? (
+                "Analyzing…"
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  Analyze with MiniMax
+                  <ArrowRight className="w-4 h-4 shrink-0" />
+                </>
+              )
+            ) : step === 2 ? (
+              savingQuestions ? (
+                "Saving…"
+              ) : (
+                <>
+                  Save & continue
+                  <ArrowRight className="w-4 h-4 shrink-0" />
+                </>
+              )
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="w-4 h-4 shrink-0" />
+              </>
+            )}
           </button>
         </footer>
       )}

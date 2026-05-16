@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Logo } from '@/components/logo'
+import { ROUTES } from '@/lib/constants/routes'
 
 const navLinks = [
   { label: 'How it Works', href: '#how-it-works' },
@@ -55,7 +56,7 @@ export function Navbar() {
           whileTap={{ scale: 0.97 }}
         >
           <Link
-            href="/login"
+            href={ROUTES.jobsNew}
             className="inline-flex items-center justify-center px-5 py-2.5 bg-[#C8F135] text-[#0F0F0F] font-display font-semibold text-sm rounded-full transition-shadow hover:shadow-[0_8px_32px_rgba(200,241,53,0.5)]"
           >
             Get Started

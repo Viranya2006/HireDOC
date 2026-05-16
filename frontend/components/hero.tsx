@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { HeroCard } from './hero-card'
+import { ROUTES } from '@/lib/constants/routes'
 
 const headlineLines = ['Hire Smarter.', 'Screen Faster.']
 
@@ -80,7 +81,7 @@ export function Hero() {
                 whileTap={{ scale: 0.97 }}
               >
                 <Link
-                  href="/login"
+                  href={ROUTES.jobsNew}
                   className="inline-flex items-center justify-center px-6 py-3 bg-[#C8F135] text-[#0F0F0F] font-display font-semibold text-sm lg:text-base rounded-full transition-shadow hover:shadow-[0_8px_32px_rgba(200,241,53,0.5)]"
                 >
                   Start Hiring Free →
