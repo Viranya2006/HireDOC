@@ -31,20 +31,12 @@ export const metadata: Metadata = {
   description: 'AI-powered hiring workspace. Create smart job pages, let MiniMax AI screen, score, and summarize every applicant automatically.',
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logo-square.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: '/apple-icon.png',
+    shortcut: '/icon-32x32.png',
   },
 }
 

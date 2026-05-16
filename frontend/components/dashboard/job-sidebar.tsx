@@ -10,6 +10,7 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", active: false },
@@ -30,9 +31,7 @@ export function JobSidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-[rgba(15,15,15,0.10)]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#C8F135] rounded-lg flex items-center justify-center">
-            <span className="font-display font-bold text-[#0F0F0F] text-sm">H</span>
-          </div>
+          <Logo size="lg" />
           <span className="font-display font-bold text-[#0F0F0F] text-lg">
             HireDoc AI
           </span>

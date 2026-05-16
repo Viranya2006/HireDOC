@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useState } from 'react'
+import { Logo } from '@/components/logo'
 
 const navLinks = [
   { label: 'How it Works', href: '#how-it-works' },
@@ -23,7 +24,7 @@ export function Navbar() {
       <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[#C8F135] rounded-sm" />
+          <Logo size="sm" priority />
           <span className="font-display font-bold text-[#0F0F0F] text-lg">HireDoc AI</span>
         </Link>
 

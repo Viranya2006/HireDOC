@@ -12,7 +12,7 @@ import { Footer } from '@/components/footer'
 export default function Home() {
   return (
     <LenisProvider>
-      <main className="min-h-screen bg-[#F5F0E8]">
+      <main className="min-h-screen bg-[#F5F0E8] pt-16">
         <Navbar />
         <Hero />
         <StatBar />

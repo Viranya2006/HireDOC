@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { Logo } from "@/components/logo";
 
 export default function LoginLayout({
   children,
@@ -10,7 +11,7 @@ export default function LoginLayout({
     <div className="min-h-screen bg-[#F5F0E8] flex flex-col">
       <nav className="h-16 border-b border-[rgba(15,15,15,0.10)] px-6 flex items-center">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[#C8F135] rounded-sm" />
+          <Logo size="sm" priority />
           <span className="font-display font-bold text-lg">HireDoc AI</span>
         </Link>
       </nav>

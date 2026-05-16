@@ -4,18 +4,13 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { HeroCard } from './hero-card'
 
-const headlineLines = [
-  'Hire Smarter.',
-  'Screen Faster.',
-  'Never Miss',
-  'The Right Fit.',
-]
+const headlineLines = ['Hire Smarter.', 'Screen Faster.']
 
 export function Hero() {
   return (
-    <section className="min-h-screen pt-16 pb-12 flex items-center bg-[#F5F0E8]">
-      <div className="max-w-[1200px] mx-auto px-6 w-full">
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
+    <section className="h-[calc(100dvh-4rem)] max-h-[920px] flex items-center overflow-hidden bg-[#F5F0E8]">
+      <div className="max-w-[1200px] mx-auto px-6 w-full py-6 lg:py-8">
+        <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 xl:gap-8 items-center">
           {/* Left Column */}
           <div>
             {/* Eyebrow */}
@@ -23,7 +18,7 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0F0F0F] rounded-full mb-6"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0F0F0F] rounded-full mb-4"
             >
               <span className="w-2 h-2 bg-[#C8F135] rounded-full animate-pulse" />
               <span className="font-body font-semibold text-[11px] uppercase tracking-wide text-[#F5F0E8]">
@@ -32,28 +27,35 @@ export function Hero() {
             </motion.div>
 
             {/* Headline */}
-            <h1 className="mb-4">
+            <h1 className="mb-3">
               {headlineLines.map((line, i) => (
                 <motion.span
-                  key={i}
+                  key={line}
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.55, 
-                    delay: 0.4 + i * 0.09, 
-                    ease: [0.16, 1, 0.3, 1] 
+                  transition={{
+                    duration: 0.55,
+                    delay: 0.4 + i * 0.09,
+                    ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="block font-display font-black text-[#0F0F0F] text-5xl sm:text-6xl lg:text-[72px] leading-[1.0]"
+                  className="block font-display font-black text-[#0F0F0F] text-4xl sm:text-5xl lg:text-[52px] xl:text-[58px] leading-[1.05]"
                 >
-                  {i === 3 ? (
-                    <>
-                      The <span className="text-[#C8F135]">Right Fit.</span>
-                    </>
-                  ) : (
-                    line
-                  )}
+                  {line}
                 </motion.span>
               ))}
+              <motion.span
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.55,
+                  delay: 0.58,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="block font-display font-black text-[#0F0F0F] text-4xl sm:text-5xl lg:text-[52px] xl:text-[58px] leading-[1.05]"
+              >
+                Never Miss{' '}
+                <span className="text-[#C8F135]">The Right Fit.</span>
+              </motion.span>
             </h1>
 
             {/* Subtext */}
@@ -61,7 +63,7 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="font-body text-[#6B6560] text-lg max-w-[460px] mb-6 leading-relaxed"
+              className="font-body text-[#6B6560] text-base lg:text-lg max-w-[460px] mb-5 leading-relaxed"
             >
               Create smart job pages, share one link. MiniMax AI screens, scores, and summarizes every applicant — so you see the best fits first.
             </motion.p>
@@ -79,7 +81,7 @@ export function Hero() {
               >
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center px-6 py-3.5 bg-[#C8F135] text-[#0F0F0F] font-display font-semibold text-base rounded-full transition-shadow hover:shadow-[0_8px_32px_rgba(200,241,53,0.5)]"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-[#C8F135] text-[#0F0F0F] font-display font-semibold text-sm lg:text-base rounded-full transition-shadow hover:shadow-[0_8px_32px_rgba(200,241,53,0.5)]"
                 >
                   Start Hiring Free →
                 </Link>
@@ -90,7 +92,7 @@ export function Hero() {
               >
                 <Link
                   href="#how-it-works"
-                  className="inline-flex items-center justify-center px-6 py-3.5 bg-white text-[#0F0F0F] font-display font-semibold text-base rounded-full border border-[rgba(15,15,15,0.15)] transition-all hover:border-[rgba(15,15,15,0.3)]"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-white text-[#0F0F0F] font-display font-semibold text-sm lg:text-base rounded-full border border-[rgba(15,15,15,0.15)] transition-all hover:border-[rgba(15,15,15,0.3)]"
                 >
                   See How It Works
                 </Link>

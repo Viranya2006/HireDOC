@@ -16,6 +16,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { getJobs } from "@/lib/api/jobs";
 import type { Job } from "@/lib/types/job";
 import { ROUTES } from "@/lib/constants/routes";
+import { Logo } from "@/components/logo";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -93,11 +94,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     >
       <div className="p-6 border-b border-[rgba(15,15,15,0.10)]">
         <Link href="/" className="flex items-center gap-3" onClick={onNavigate}>
-          <div className="w-10 h-10 bg-[#C8F135] rounded-lg flex items-center justify-center">
-            <span className="font-display font-bold text-[#0F0F0F] text-sm">
-              H
-            </span>
-          </div>
+          <Logo size="lg" />
           <span className="font-display font-bold text-[#0F0F0F] text-lg">
             HireDoc AI
           </span>
