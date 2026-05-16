@@ -169,13 +169,13 @@ export function MiniMaxAnalysis({
       initial={{ y: 24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 overflow-y-auto p-6"
+      className="flex-1 overflow-y-auto p-5"
     >
       <div className="max-w-[1000px] mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-[#C8F135] flex items-center justify-center">
-            <Brain className="w-6 h-6 text-[#0F0F0F]" />
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-lg bg-[#C8F135] flex items-center justify-center">
+            <Brain className="w-5 h-5 text-[#0F0F0F]" />
           </div>
           <div>
             <h2 className="font-display font-bold text-xl text-[#0F0F0F]">
@@ -185,22 +185,22 @@ export function MiniMaxAnalysis({
               AI-powered job posting optimization
             </p>
           </div>
-          <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-[rgba(200,241,53,0.15)] rounded-full">
+          <div className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-[rgba(200,241,53,0.15)] rounded-full">
             <Sparkles className="w-4 h-4 text-[#C8F135]" />
-            <span className="font-body text-sm font-medium text-[#0F0F0F]">
+            <span className="font-body text-xs font-medium text-[#0F0F0F]">
               Analysis Complete
             </span>
           </div>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-3 gap-4">
           {/* Left Column - Overall Score */}
           <motion.div
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-2xl p-6 border border-[rgba(15,15,15,0.08)]"
+            className="bg-white rounded-xl p-5 border border-[rgba(15,15,15,0.08)]"
           >
             <h3 className="font-display font-semibold text-sm text-[#0F0F0F] mb-4">
               Overall Score
@@ -208,7 +208,7 @@ export function MiniMaxAnalysis({
             <div className="flex justify-center mb-4">
               <ScoreRing
                 score={data.overallScore}
-                size={120}
+                size={104}
                 strokeWidth={10}
                 accentColor="#C8F135"
                 showColorByScore={false}
@@ -224,7 +224,7 @@ export function MiniMaxAnalysis({
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-2xl p-6 border border-[rgba(15,15,15,0.08)]"
+            className="bg-white rounded-xl p-5 border border-[rgba(15,15,15,0.08)]"
           >
             <h3 className="font-display font-semibold text-sm text-[#0F0F0F] mb-4">
               Key Metrics
@@ -266,7 +266,7 @@ export function MiniMaxAnalysis({
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-2xl p-6 border border-[rgba(15,15,15,0.08)]"
+            className="bg-white rounded-xl p-5 border border-[rgba(15,15,15,0.08)]"
           >
             <h3 className="font-display font-semibold text-sm text-[#0F0F0F] mb-4">
               Detected Skills
@@ -282,7 +282,7 @@ export function MiniMaxAnalysis({
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}
-                    className="px-3 py-1.5 bg-[#00C896] text-white font-body text-xs font-medium rounded-full"
+                    className="px-2.5 py-1 bg-[#00C896] text-white font-body text-xs font-medium rounded-full"
                   >
                     {skill}
                   </motion.span>
@@ -300,7 +300,7 @@ export function MiniMaxAnalysis({
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.5 + index * 0.05, duration: 0.3 }}
-                    className="px-3 py-1.5 bg-[#EDE8DC] text-[#6B6560] font-body text-xs font-medium rounded-full"
+                    className="px-2.5 py-1 bg-[#EDE8DC] text-[#6B6560] font-body text-xs font-medium rounded-full"
                   >
                     {skill}
                   </motion.span>
@@ -314,7 +314,7 @@ export function MiniMaxAnalysis({
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.25, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-2xl p-6 border-t-4 border-t-[#00C896] border border-[rgba(15,15,15,0.08)] col-span-1"
+            className="bg-white rounded-xl p-5 border border-[rgba(15,15,15,0.08)] col-span-1"
           >
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle2 className="w-5 h-5 text-[#00C896]" />
@@ -345,7 +345,7 @@ export function MiniMaxAnalysis({
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-2xl p-6 border-t-4 border-t-[#FF4D2E] border border-[rgba(15,15,15,0.08)] col-span-2"
+            className="bg-white rounded-xl p-5 border border-[rgba(15,15,15,0.08)] col-span-2"
           >
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="w-5 h-5 text-[#FF4D2E]" />
@@ -360,7 +360,7 @@ export function MiniMaxAnalysis({
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 + index * 0.05, duration: 0.3 }}
-                  className="p-3 bg-[#F5F0E8] rounded-xl"
+                  className="p-2.5 bg-[#F6F7F9] rounded-lg"
                 >
                   <span className="font-body text-sm text-[#0F0F0F]">
                     {suggestion}

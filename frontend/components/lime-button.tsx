@@ -21,7 +21,7 @@ export function LimeButton({
   disabled,
 }: LimeButtonProps) {
   const base =
-    "inline-flex items-center justify-center px-6 py-3 font-display font-semibold text-sm rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none";
+    "inline-flex items-center justify-center px-4 py-2 font-display font-semibold text-xs rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none";
 
   const styles =
     variant === "lime"
