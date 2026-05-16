@@ -5,6 +5,8 @@ import {
   MiniMaxError,
 } from "../services/minimaxService";
 
+// Analyze a job description using the Minimax API and save the results to the job document
+
 export const analyzeJD = async (req: Request, res: Response) => {
   const job = await Job.findOne({
     _id: req.params.job_id,
