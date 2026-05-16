@@ -20,9 +20,50 @@ export const env = {
   apiBaseUrl:
     process.env.API_BASE_URL?.replace(/\/$/, "") ??
     `http://localhost:${port}`,
-  minimaxApiKey: process.env.MINIMAX_API_KEY ?? "",
-  minimaxGroupId: process.env.MINIMAX_GROUP_ID ?? "",
+  minimaxApiKey: normalizeMiniMaxApiKey(process.env.MINIMAX_API_KEY ?? ""),
+  minimaxGroupId: (process.env.MINIMAX_GROUP_ID ?? "").trim(),
+  firebaseServiceAccountJson:
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim() ?? "",
 } as const;
+
+export function getFirebaseServiceAccount(): Record<string, unknown> | null {
+  const raw = env.firebaseServiceAccountJson;
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON");
+  }
+}
+
+if (
+  env.nodeEnv === "production" &&
+  !env.firebaseServiceAccountJson
+) {
+  console.error(
+    "FIREBASE_SERVICE_ACCOUNT_JSON is required in production",
+  );
+  process.exit(1);
+}
+
+/** Strip whitespace, quotes, and accidental `Bearer ` prefix from .env values. */
+export function normalizeMiniMaxApiKey(raw: string): string {
+  return raw.trim().replace(/^Bearer\s+/i, "").replace(/^["']|["']$/g, "");
+}
+
+/** Token Plan / Coding Plan keys (sk-cp-…) use OpenAI-compatible API without GroupId. */
+export function isMiniMaxTokenPlanKey(apiKey: string): boolean {
+  return apiKey.startsWith("sk-cp-");
+}
+
+export function getMinimaxConfig() {
+  const apiKey = normalizeMiniMaxApiKey(
+    process.env.MINIMAX_API_KEY ?? env.minimaxApiKey,
+  );
+  const groupId = (process.env.MINIMAX_GROUP_ID ?? env.minimaxGroupId).trim();
+  const isTokenPlan = isMiniMaxTokenPlanKey(apiKey);
+  return { apiKey, groupId, isTokenPlan };
+}
 
 export function mongoDisplayUri(uri: string): string {
   try {

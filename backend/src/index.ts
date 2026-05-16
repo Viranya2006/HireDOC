@@ -5,6 +5,7 @@ import path from "node:path";
 import "./types";
 import { env } from "./config/env";
 import { connectDB } from "./config/db";
+import { getFirebaseAdminApp } from "./config/firebaseAdmin";
 import authRoutes from "./routes/auth";
 import jobRoutes from "./routes/jobs";
 import questionRoutes from "./routes/questions";
@@ -38,5 +39,13 @@ app.use("/api/ai", aiRoutes);
 app.use(errorHandler);
 
 connectDB().then(() => {
+  const firebaseApp = getFirebaseAdminApp();
+  if (firebaseApp) {
+    console.log("Firebase Admin initialized");
+  } else if (env.nodeEnv === "development") {
+    console.warn(
+      "Firebase Admin not configured — set FIREBASE_SERVICE_ACCOUNT_JSON for auth",
+    );
+  }
   app.listen(PORT, () => console.log(`HireDoc AI running on port ${PORT}`));
 });

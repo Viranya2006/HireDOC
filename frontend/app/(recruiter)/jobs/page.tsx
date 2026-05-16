@@ -22,8 +22,12 @@ export default function JobsPage() {
     getJobs().then(setJobs);
   }, []);
 
-  const copyApplyLink = (slug: string) => {
-    const url = `${window.location.origin}${ROUTES.apply(slug)}`;
+  const copyApplyLink = (job: Job) => {
+    if (job.status !== "active") {
+      toast.error("Publish this job before sharing the apply link.");
+      return;
+    }
+    const url = `${window.location.origin}${ROUTES.apply(job.slug)}`;
     navigator.clipboard.writeText(url);
     toast.success("Apply link copied to clipboard");
   };
@@ -103,18 +107,30 @@ export default function JobsPage() {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => copyApplyLink(job.slug)}
-                  className="px-3 py-1.5 text-xs font-body font-medium border border-[#E8E2D9] rounded-lg hover:bg-[#C8F135] hover:border-[#C8F135]"
+                  onClick={() => copyApplyLink(job)}
+                  disabled={job.status !== "active"}
+                  title={
+                    job.status !== "active"
+                      ? "Publish the job to share an apply link"
+                      : "Copy public apply link"
+                  }
+                  className="px-3 py-1.5 text-xs font-body font-medium border border-[#E8E2D9] rounded-lg hover:bg-[#C8F135] hover:border-[#C8F135] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 >
                   Copy link
                 </button>
-                <Link
-                  href={ROUTES.apply(job.slug)}
-                  target="_blank"
-                  className="px-3 py-1.5 text-xs font-body font-medium text-[#0057FF] hover:underline"
-                >
-                  Preview
-                </Link>
+                {job.status === "active" ? (
+                  <Link
+                    href={ROUTES.apply(job.slug)}
+                    target="_blank"
+                    className="px-3 py-1.5 text-xs font-body font-medium text-[#0057FF] hover:underline"
+                  >
+                    Preview
+                  </Link>
+                ) : (
+                  <span className="px-3 py-1.5 text-xs font-body text-[#6B6560]">
+                    Draft
+                  </span>
+                )}
               </div>
             </motion.div>
           ))}

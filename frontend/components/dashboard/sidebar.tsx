@@ -57,8 +57,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     onNavigate?.();
   };
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     router.push(ROUTES.home);
     onNavigate?.();
   };

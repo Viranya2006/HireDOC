@@ -98,17 +98,28 @@ export const publishJob = async (req: Request, res: Response) => {
 };
 
 export const getPublicJob = async (req: Request, res: Response) => {
-  const job = await Job.findOne({
-    public_slug: req.params.slug,
-    is_published: true,
-  })
-    .select("_id title company location job_type description expires_at")
+  const slug = req.params.slug.trim();
+  const job = await Job.findOne({ public_slug: slug })
+    .select(
+      "_id title company location job_type description expires_at public_slug is_published",
+    )
     .lean();
 
-  if (!job)
-    return res.status(404).json({ error: "Job not found or not published" });
+  if (!job) {
+    return res.status(404).json({ error: "Job not found", code: "NOT_FOUND" });
+  }
+  if (!job.is_published) {
+    return res.status(403).json({
+      error:
+        "This job is not open for applications yet. Ask the recruiter to publish it first.",
+      code: "NOT_PUBLISHED",
+    });
+  }
   if (new Date(job.expires_at) < new Date()) {
-    return res.status(410).json({ error: "This job posting has expired" });
+    return res.status(410).json({
+      error: "This job posting has expired",
+      code: "EXPIRED",
+    });
   }
 
   const questions = await Question.find({ job_id: job._id })
