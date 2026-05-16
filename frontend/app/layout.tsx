@@ -30,13 +30,9 @@ export const metadata: Metadata = {
   title: 'HireDoc AI — Hire Smarter. Screen Faster.',
   description: 'AI-powered hiring workspace. Create smart job pages, let MiniMax AI screen, score, and summarize every applicant automatically.',
   icons: {
-    icon: [
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/icon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/logo-square.png', sizes: '512x512', type: 'image/png' },
-    ],
+    icon: '/icon.png',
     apple: '/apple-icon.png',
-    shortcut: '/icon-32x32.png',
+    shortcut: '/icon.png',
   },
 }
 
