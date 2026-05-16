@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth, getAuthErrorMessage } from "@/providers/auth-provider";
 import { LimeButton } from "@/components/lime-button";
 import { ROUTES } from "@/lib/constants/routes";
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,22 +92,38 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="mt-1 w-full px-4 py-3 rounded-xl border border-[rgba(15,15,15,0.15)] font-body text-sm focus:outline-none focus:border-[#C8F135]"
-            placeholder="you@company.com"
+            placeholder="Enter your email..."
           />
         </div>
         <motion.div>
           <label className="font-body text-xs font-semibold text-[#6B6560] uppercase tracking-wide">
             Password
           </label>
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full px-4 py-3 rounded-xl border border-[rgba(15,15,15,0.15)] font-body text-sm focus:outline-none focus:border-[#C8F135]"
-            placeholder="••••••••"
-          />
+          <motion.div className="relative mt-1">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 pr-11 rounded-xl border border-[rgba(15,15,15,0.15)] font-body text-sm focus:outline-none focus:border-[#C8F135]"
+              placeholder="Enter your password..."
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#6B6560] hover:text-[#0F0F0F] transition-colors rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8F135]"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" aria-hidden />
+              ) : (
+                <Eye className="w-5 h-5" aria-hidden />
+              )}
+            </button>
+          </motion.div>
         </motion.div>
         {info && (
           <p className="font-body text-sm text-[#00C896] bg-[#00C896]/10 rounded-lg p-3">
@@ -134,6 +152,7 @@ export default function LoginPage() {
           setIsSignUp(!isSignUp);
           setError("");
           setInfo("");
+          setShowPassword(false);
         }}
         className="mt-4 w-full font-body text-sm text-[#0057FF] hover:underline"
       >
