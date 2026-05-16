@@ -117,7 +117,7 @@ export default function ApplyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F0E8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F6F7F9] flex items-center justify-center">
         <p className="font-body text-[#6B6560]">Loading job…</p>
       </div>
     );
@@ -133,7 +133,7 @@ export default function ApplyPage() {
         : "Job not found";
 
     return (
-      <motion.div className="min-h-screen bg-[#F5F0E8] flex flex-col items-center justify-center gap-4 p-8 text-center max-w-md mx-auto">
+      <motion.div className="min-h-screen bg-[#F6F7F9] flex flex-col items-center justify-center gap-4 p-8 text-center max-w-md mx-auto">
         <h1 className="font-display font-bold text-2xl">{heading}</h1>
         <p className="font-body text-[#6B6560]">
           {loadError ||
@@ -154,7 +154,7 @@ export default function ApplyPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#F5F0E8] flex items-center justify-center p-8">
+      <div className="min-h-screen bg-[#F6F7F9] flex items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -175,9 +175,9 @@ export default function ApplyPage() {
   const questionTexts = job.questions.map((q) => q.text);
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8]">
+    <div className="min-h-screen bg-[#F6F7F9]">
       {/* Navbar */}
-      <nav className="h-[72px] bg-[#F5F0E8] border-b border-[#E8E2D9] px-8 flex items-center justify-between sticky top-0 z-50">
+      <nav className="h-16 bg-[#F6F7F9] border-b border-[#E8E2D9] px-4 md:px-8 flex items-center justify-between sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-3">
           <div className="w-9 h-9 bg-[#C8F135] rounded-lg" />
           <span className="font-display font-bold text-[#0F0F0F] text-lg">
@@ -190,44 +190,103 @@ export default function ApplyPage() {
       </nav>
 
       {/* Content */}
-      <main className="max-w-[900px] mx-auto px-6 py-12">
+      <main className="max-w-[1320px] mx-auto px-4 md:px-6 py-8">
         {/* Job Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="bg-white rounded-2xl border border-[#E8E2D9] p-8 mb-8"
+          className="bg-white rounded-xl border border-[#E8E2D9] p-4 md:p-5 mb-5"
         >
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
             <div>
-              <h1 className="font-display font-extrabold text-[#0F0F0F] text-3xl mb-2">
+              <h1 className="font-display font-extrabold text-[#0F0F0F] text-xl md:text-2xl mb-1.5">
                 {job.title}
               </h1>
-              <div className="flex items-center gap-4 text-[#6B6560]">
-                <span className="font-body text-sm">{job.company}</span>
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 text-[#6B6560]">
+                <span className="font-body text-xs">{job.company}</span>
                 <span className="w-1 h-1 bg-[#6B6560] rounded-full" />
-                <span className="font-body text-sm">{job.location}</span>
+                <span className="font-body text-xs">{job.location}</span>
                 <span className="w-1 h-1 bg-[#6B6560] rounded-full" />
-                <span className="font-body text-sm capitalize">{job.type}</span>
+                <span className="font-body text-xs capitalize">{job.type}</span>
                 {job.salary && (
                   <>
                     <span className="w-1 h-1 bg-[#6B6560] rounded-full" />
-                    <span className="font-body text-sm">{job.salary}</span>
+                    <span className="font-body text-xs">{job.salary}</span>
                   </>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-[#00C896]/10 text-[#00C896] rounded-full font-display font-semibold text-xs">
+              <span className="px-2.5 py-1 bg-[#00C896]/10 text-[#00C896] rounded-full font-display font-semibold text-[11px]">
                 Open
               </span>
             </div>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-[1fr_320px] gap-8">
-          {/* Main Form */}
-          <div className="space-y-6">
+        <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.4,
+              delay: 0.08,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
+            className="bg-white rounded-xl border border-[#E8E2D9] p-5 md:p-6"
+          >
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.8fr)]">
+              <div>
+                <h3 className="font-display font-bold text-[#0F0F0F] text-base mb-3">
+                  Job Description
+                </h3>
+                <JobDescription description={job.description} />
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+                {(job.requirements ?? []).length > 0 && (
+                  <div>
+                    <h4 className="font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-3">
+                      Requirements
+                    </h4>
+                    <ul className="space-y-2">
+                      {(job.requirements ?? []).map((req, index) => (
+                        <li
+                          key={index}
+                          className="flex items-start gap-2 font-body text-sm text-[#0F0F0F]"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#00C896] shrink-0" />
+                          {req}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {(job.benefits ?? []).length > 0 && (
+                  <div>
+                    <h4 className="font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-3">
+                      Benefits
+                    </h4>
+                    <ul className="space-y-2">
+                      {(job.benefits ?? []).map((benefit, index) => (
+                        <li
+                          key={index}
+                          className="flex items-start gap-2 font-body text-sm text-[#0F0F0F]"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#C8F135] shrink-0" />
+                          {benefit}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="space-y-4">
             {/* Step Indicator */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -237,13 +296,13 @@ export default function ApplyPage() {
                 delay: 0.1,
                 ease: [0.25, 0.46, 0.45, 0.94],
               }}
-              className="flex items-center gap-4"
+              className="bg-white rounded-xl border border-[#E8E2D9] p-3 flex flex-wrap items-center justify-center gap-3"
             >
               {[1, 2].map((s) => (
                 <button
                   key={s}
                   onClick={() => setStep(s)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-display font-semibold text-sm transition-all ${
+                  className={`flex min-w-[180px] items-center justify-center gap-2 px-3.5 py-2 rounded-full font-display font-semibold text-xs transition-all ${
                     step === s
                       ? "bg-[#C8F135] text-[#0F0F0F]"
                       : step > s
@@ -282,13 +341,13 @@ export default function ApplyPage() {
                   delay: 0.2,
                   ease: [0.25, 0.46, 0.45, 0.94],
                 }}
-                className="bg-white rounded-2xl border border-[#E8E2D9] p-8"
+                className="bg-white rounded-xl border border-[#E8E2D9] p-5 md:p-6"
               >
-                <h2 className="font-display font-bold text-[#0F0F0F] text-xl mb-6">
+                <h2 className="font-display font-bold text-[#0F0F0F] text-lg mb-5">
                   Your Information
                 </h2>
-                <div className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                         Full Name *
@@ -300,7 +359,7 @@ export default function ApplyPage() {
                           setFormData({ ...formData, name: e.target.value })
                         }
                         placeholder="Alex Kim"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                     <div>
@@ -314,11 +373,11 @@ export default function ApplyPage() {
                           setFormData({ ...formData, email: e.target.value })
                         }
                         placeholder="alex@email.com"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                         Phone
@@ -330,7 +389,7 @@ export default function ApplyPage() {
                           setFormData({ ...formData, phone: e.target.value })
                         }
                         placeholder="+1 (555) 123-4567"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                     <div>
@@ -344,7 +403,7 @@ export default function ApplyPage() {
                           setFormData({ ...formData, linkedin: e.target.value })
                         }
                         placeholder="linkedin.com/in/alexkim"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                   </div>
@@ -359,7 +418,7 @@ export default function ApplyPage() {
                         setFormData({ ...formData, portfolio: e.target.value })
                       }
                       placeholder="https://github.com/alexkim"
-                      className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                      className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                     />
                   </div>
                   <div>
@@ -378,7 +437,7 @@ export default function ApplyPage() {
                         }
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       />
-                      <div className="w-full px-4 py-6 bg-[#F5F0E8] border-2 border-dashed border-[#E8E2D9] rounded-xl text-center hover:border-[#C8F135] transition-colors">
+                      <div className="w-full px-4 py-5 bg-[#F6F7F9] border border-dashed border-[#E8E2D9] rounded-lg text-center hover:border-[#C8F135] transition-colors">
                         <svg
                           className="w-8 h-8 text-[#6B6560] mx-auto mb-2"
                           fill="none"
@@ -404,10 +463,10 @@ export default function ApplyPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end mt-8">
+                <div className="flex justify-end mt-6">
                   <button
                     onClick={() => setStep(2)}
-                    className="px-6 py-3 bg-[#C8F135] rounded-full font-display font-semibold text-sm text-[#0F0F0F] hover:scale-[1.02] transition-transform"
+                    className="px-5 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-xs text-[#0F0F0F] hover:scale-[1.02] transition-transform"
                   >
                     Continue to Questions
                   </button>
@@ -424,21 +483,21 @@ export default function ApplyPage() {
                   delay: 0.2,
                   ease: [0.25, 0.46, 0.45, 0.94],
                 }}
-                className="bg-white rounded-2xl border border-[#E8E2D9] p-8"
+                className="bg-white rounded-xl border border-[#E8E2D9] p-5 md:p-6"
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <h2 className="font-display font-bold text-[#0F0F0F] text-xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="font-display font-bold text-[#0F0F0F] text-lg">
                     Screening Questions
                   </h2>
                   <span className="px-2 py-1 bg-[#0057FF]/10 text-[#0057FF] rounded font-mono text-xs">
                     AI Analyzed
                   </span>
                 </div>
-                <p className="font-body text-sm text-[#6B6560] mb-6">
+                <p className="font-body text-sm text-[#6B6560] mb-5">
                   Your answers will be analyzed by MiniMax AI to match you with
                   this role. Be thorough and specific.
                 </p>
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {questionTexts.map((question, index) => (
                     <div key={index}>
                       <label className="block font-display font-semibold text-sm text-[#0F0F0F] mb-2">
@@ -449,7 +508,7 @@ export default function ApplyPage() {
                         onChange={(e) => updateAnswer(index, e.target.value)}
                         rows={4}
                         placeholder="Type your answer here..."
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors resize-none"
+                        className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors resize-none"
                       />
                     </div>
                   ))}
@@ -457,10 +516,10 @@ export default function ApplyPage() {
                 {error && (
                   <p className="font-body text-sm text-[#FF4D2E] mt-4">{error}</p>
                 )}
-                <div className="flex justify-between mt-8">
+                <div className="flex justify-between mt-6">
                   <button
                     onClick={() => setStep(1)}
-                    className="px-6 py-3 border border-[#E8E2D9] rounded-full font-display font-semibold text-sm text-[#6B6560] hover:border-[#0F0F0F] hover:text-[#0F0F0F] transition-colors"
+                    className="px-5 py-2.5 border border-[#E8E2D9] rounded-full font-display font-semibold text-xs text-[#6B6560] hover:border-[#0F0F0F] hover:text-[#0F0F0F] transition-colors"
                   >
                     Back
                   </button>
@@ -468,89 +527,13 @@ export default function ApplyPage() {
                     type="button"
                     onClick={handleSubmit}
                     disabled={submitting}
-                    className="px-6 py-3 bg-[#C8F135] rounded-full font-display font-semibold text-sm text-[#0F0F0F] hover:scale-[1.02] transition-transform disabled:opacity-50"
+                    className="px-5 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-xs text-[#0F0F0F] hover:scale-[1.02] transition-transform disabled:opacity-50"
                   >
                     {submitting ? "Submitting…" : "Submit Application"}
                   </button>
                 </div>
               </motion.div>
             )}
-          </div>
-
-          {/* Job Details Sidebar */}
-          <div className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{
-                duration: 0.4,
-                delay: 0.3,
-                ease: [0.25, 0.46, 0.45, 0.94],
-              }}
-              className="bg-white rounded-2xl border border-[#E8E2D9] p-6 sticky top-[96px]"
-            >
-              <h3 className="font-display font-bold text-[#0F0F0F] text-sm mb-4">
-                About This Role
-              </h3>
-              <JobDescription
-                description={job.description}
-                className="mb-6"
-              />
-
-              <h4 className="font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-3">
-                Requirements
-              </h4>
-              <ul className="space-y-2 mb-6">
-                {(job.requirements ?? []).map((req, index) => (
-                  <li
-                    key={index}
-                    className="flex items-start gap-2 font-body text-sm text-[#0F0F0F]"
-                  >
-                    <svg
-                      className="w-4 h-4 text-[#00C896] mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    {req}
-                  </li>
-                ))}
-              </ul>
-
-              <h4 className="font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-3">
-                Benefits
-              </h4>
-              <ul className="space-y-2">
-                {(job.benefits ?? []).map((benefit, index) => (
-                  <li
-                    key={index}
-                    className="flex items-start gap-2 font-body text-sm text-[#0F0F0F]"
-                  >
-                    <svg
-                      className="w-4 h-4 text-[#C8F135] mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    {benefit}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
           </div>
         </div>
       </main>

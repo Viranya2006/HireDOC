@@ -66,19 +66,19 @@ export function HiringBriefPanel({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 40, opacity: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="w-[380px] bg-white rounded-xl overflow-hidden flex flex-col shrink-0 h-full"
+      className="w-[360px] bg-white rounded-xl border border-[rgba(15,15,15,0.08)] overflow-hidden flex flex-col shrink-0 h-full"
     >
       {/* Header */}
-      <div className="p-5 border-b border-[rgba(15,15,15,0.10)]">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#0057FF] flex items-center justify-center">
+      <div className="p-4 border-b border-[rgba(15,15,15,0.10)]">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-full bg-[#0057FF] flex items-center justify-center">
               <span className="font-body text-white text-sm font-semibold">
                 {candidate.initials}
               </span>
             </div>
             <div>
-              <h3 className="font-display font-extrabold text-[#0F0F0F] text-lg">
+              <h3 className="font-display font-extrabold text-[#0F0F0F] text-base">
                 {candidate.name}
               </h3>
               <p className="font-body text-[#6B6560] text-sm">{candidate.role}</p>
@@ -90,7 +90,7 @@ export function HiringBriefPanel({
             </p>
             <button
               onClick={onClose}
-              className="mt-1 p-1 hover:bg-[#F5F0E8] rounded transition-colors"
+              className="mt-1 p-1 hover:bg-[#F6F7F9] rounded transition-colors"
             >
               <X className="w-4 h-4 text-[#6B6560]" />
             </button>
@@ -98,8 +98,8 @@ export function HiringBriefPanel({
         </div>
 
         {/* Score */}
-        <div className="flex items-center gap-4">
-          <ScoreRing score={candidate.score} size={80} />
+        <div className="flex items-center gap-3">
+          <ScoreRing score={candidate.score} size={68} />
           <div>
             <p className="font-body text-[#6B6560] text-sm">Fit Score</p>
             <p className="font-data font-bold text-[#0F0F0F] text-lg">
@@ -110,7 +110,7 @@ export function HiringBriefPanel({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-5 space-y-5">
+      <div className="flex-1 overflow-auto p-4 space-y-4">
         {/* Matching Skills */}
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -228,7 +228,7 @@ export function HiringBriefPanel({
                     !questionsDirty ||
                     normalizeQuestions(interviewQuestions).length === 0
                   }
-                  className="flex-1 py-2.5 bg-[#0057FF] text-white rounded-xl font-body text-sm font-semibold disabled:opacity-50"
+                  className="flex-1 py-2 bg-[#0057FF] text-white rounded-lg font-body text-xs font-semibold disabled:opacity-50"
                 >
                   {savingQuestions ? "Saving…" : "Save questions"}
                 </button>
@@ -238,7 +238,7 @@ export function HiringBriefPanel({
                     setInterviewQuestions(candidate.questions);
                     setEditingQuestions(false);
                   }}
-                  className="px-4 py-2.5 border rounded-xl font-body text-sm text-[#6B6560]"
+                  className="px-3 py-2 border rounded-lg font-body text-xs text-[#6B6560]"
                 >
                   Cancel
                 </button>
@@ -255,12 +255,12 @@ export function HiringBriefPanel({
       </div>
 
       {/* Actions */}
-      <div className="p-5 border-t border-[rgba(15,15,15,0.10)] flex gap-3">
+      <div className="p-4 border-t border-[rgba(15,15,15,0.10)] flex gap-2.5">
         <button
           type="button"
           onClick={onShortlist}
           disabled={actionsDisabled}
-          className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#C8F135] rounded-xl font-body text-[#0F0F0F] text-sm font-semibold hover:bg-[#b8e125] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#C8F135] rounded-lg font-body text-[#0F0F0F] text-xs font-semibold hover:bg-[#b8e125] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Check className="w-4 h-4" />
           Shortlist
@@ -269,7 +269,7 @@ export function HiringBriefPanel({
           type="button"
           onClick={onReject}
           disabled={actionsDisabled}
-          className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-[#FF4D2E] rounded-xl font-body text-[#FF4D2E] text-sm font-semibold hover:bg-[#FF4D2E]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border border-[#FF4D2E] rounded-lg font-body text-[#FF4D2E] text-xs font-semibold hover:bg-[#FF4D2E]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="w-4 h-4" />
           Reject

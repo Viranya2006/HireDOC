@@ -60,7 +60,7 @@ export function JobSidebar() {
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${
               item.active
                 ? "bg-[rgba(200,241,53,0.08)] border-l-[3px] border-[#C8F135] text-[#C8F135]"
-                : "text-[#6B6560] hover:bg-[#F5F0E8] hover:text-[#0F0F0F]"
+                : "text-[#6B6560] hover:bg-[#F6F7F9] hover:text-[#0F0F0F]"
             }`}
           >
             <item.icon className="w-5 h-5" />

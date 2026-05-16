@@ -13,7 +13,7 @@ const headlineLines = [
 
 export function Hero() {
   return (
-    <section className="min-h-screen pt-16 pb-12 flex items-center bg-[#F5F0E8]">
+    <section className="min-h-screen pt-16 pb-12 flex items-center bg-[#F6F7F9]">
       <div className="max-w-[1200px] mx-auto px-6 w-full">
         <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
           {/* Left Column */}

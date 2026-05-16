@@ -41,7 +41,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-2 rounded-full font-display font-semibold text-sm transition-all ${
                   activeTab === tab.id
-                    ? "bg-[#0F0F0F] text-white"
+                    ? "bg-[#EEF7D3] text-[#0F0F0F]"
                     : "bg-white border border-[#E8E2D9] text-[#6B6560] hover:border-[#0F0F0F] hover:text-[#0F0F0F]"
                 }`}
               >
@@ -93,7 +93,7 @@ export default function SettingsPage() {
                       <input
                         type="text"
                         defaultValue="Sarah Chen"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                     <div>
@@ -103,7 +103,7 @@ export default function SettingsPage() {
                       <input
                         type="email"
                         defaultValue="sarah@acmecorp.com"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                     <div>
@@ -113,7 +113,7 @@ export default function SettingsPage() {
                       <input
                         type="text"
                         defaultValue="Head of Talent Acquisition"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                     <div>
@@ -123,7 +123,7 @@ export default function SettingsPage() {
                       <input
                         type="tel"
                         defaultValue="+1 (555) 987-6543"
-                        className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
                       />
                     </div>
                   </div>
@@ -143,7 +143,7 @@ export default function SettingsPage() {
                     <input
                       type="password"
                       placeholder="Enter current password"
-                      className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                      className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                     />
                   </div>
                   <div>
@@ -153,7 +153,7 @@ export default function SettingsPage() {
                     <input
                       type="password"
                       placeholder="Enter new password"
-                      className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                      className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                     />
                   </div>
                   <div>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
                     <input
                       type="password"
                       placeholder="Confirm new password"
-                      className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                      className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                     />
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                   <input
                     type="text"
                     defaultValue="Acme Corp"
-                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                    className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
                   />
                 </div>
                 <div>
@@ -199,14 +199,14 @@ export default function SettingsPage() {
                   <input
                     type="url"
                     defaultValue="https://acmecorp.com"
-                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
+                    className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors"
                   />
                 </div>
                 <div>
                   <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                     Industry
                   </label>
-                  <select className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors">
+                  <select className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors">
                     <option>Technology</option>
                     <option>Finance</option>
                     <option>Healthcare</option>
@@ -218,7 +218,7 @@ export default function SettingsPage() {
                   <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                     Company Size
                   </label>
-                  <select className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors">
+                  <select className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors">
                     <option>1-10</option>
                     <option>11-50</option>
                     <option>51-200</option>
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                   <textarea
                     rows={4}
                     defaultValue="Acme Corp is a leading technology company building innovative solutions for the modern enterprise."
-                    className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors resize-none"
+                    className="w-full px-4 py-3 bg-[#F6F7F9] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] focus:outline-none focus:border-[#C8F135] transition-colors resize-none"
                   />
                 </div>
               </div>

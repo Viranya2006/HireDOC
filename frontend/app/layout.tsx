@@ -54,8 +54,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${unbounded.variable} ${dmSans.variable} ${spaceMono.variable} bg-[#F5F0E8]`}>
-      <body className="font-body antialiased bg-[#F5F0E8] text-[#0F0F0F]">
+    <html lang="en" className={`${unbounded.variable} ${dmSans.variable} ${spaceMono.variable} bg-[#F6F7F9]`}>
+      <body className="font-body antialiased bg-[#F6F7F9] text-[#0F0F0F]">
         <AuthProvider>
           {children}
           <Toaster position="top-center" richColors />
