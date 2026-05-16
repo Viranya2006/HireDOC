@@ -26,7 +26,7 @@ if (env.frontendUrl) {
 
 app.use(
   cors({
-    origin: corsOrigins,
+    origin: env.corsOrigins,
     credentials: true,
   }),
 );

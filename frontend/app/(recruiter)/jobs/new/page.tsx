@@ -12,8 +12,9 @@ import {
   saveJobDraft,
   clearJobDraft,
 } from "@/lib/api/jobs";
-import { analyzeJD } from "@/lib/api/minimax";
+import { analyzeJD, type JDAnalysisResult } from "@/lib/api/minimax";
 import { setJobQuestions } from "@/lib/api/questions";
+import { normalizeQuestions } from "@/components/dashboard/questions-editor";
 import { ApiError } from "@/lib/api/client";
 import type { JobType } from "@/lib/types/job";
 import { ROUTES } from "@/lib/constants/routes";
@@ -27,6 +28,8 @@ export default function JobCreationPage() {
   const [step, setStep] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [savingQuestions, setSavingQuestions] = useState(false);
+  const [analysis, setAnalysis] = useState<JDAnalysisResult | null>(null);
   const [draftJobId, setDraftJobId] = useState<string | null>(null);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
 
@@ -75,6 +78,7 @@ export default function JobCreationPage() {
       if (questions.length > 0) {
         await setJobQuestions(jobId, questions);
       }
+      setAnalysis(result);
       setForm((f) => ({ ...f, questions, slug }));
       setStep(2);
       toast.success("MiniMax analysis complete");
@@ -84,6 +88,31 @@ export default function JobCreationPage() {
       );
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const handleSaveQuestionsAndContinue = async () => {
+    const cleaned = normalizeQuestions(form.questions);
+    if (cleaned.length === 0) {
+      toast.error("Add at least one screening question");
+      return;
+    }
+    if (!draftJobId) {
+      toast.error("Complete analysis before continuing");
+      return;
+    }
+
+    setSavingQuestions(true);
+    try {
+      await setJobQuestions(draftJobId, cleaned);
+      setForm((f) => ({ ...f, questions: cleaned }));
+      setStep(3);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to save questions",
+      );
+    } finally {
+      setSavingQuestions(false);
     }
   };
 
@@ -123,11 +152,11 @@ export default function JobCreationPage() {
         : ROUTES.apply(publishedSlug);
 
     return (
-      <div className="p-8 max-w-2xl mx-auto">
+      <div className="p-5 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-[#E8E2D9] p-8 text-center"
+          className="bg-white rounded-xl border border-[#E8E2D9] p-6 text-center"
         >
           <h2 className="font-display font-extrabold text-2xl mb-2">
             Job published!
@@ -135,14 +164,14 @@ export default function JobCreationPage() {
           <p className="font-body text-[#6B6560] mb-6">
             Share this link with candidates:
           </p>
-          <code className="block p-4 bg-[#F5F0E8] rounded-xl text-sm break-all mb-6">
+          <code className="block p-4 bg-[#F6F7F9] rounded-xl text-sm break-all mb-6">
             {applyUrl}
           </code>
           <div className="flex gap-3 justify-center flex-wrap">
             <button
               type="button"
               onClick={() => navigator.clipboard.writeText(applyUrl)}
-              className="px-5 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-sm"
+              className="px-4 py-2 bg-[#C8F135] rounded-full font-display font-semibold text-xs"
             >
               Copy link
             </button>
@@ -158,10 +187,10 @@ export default function JobCreationPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="bg-white border-b border-[rgba(15,15,15,0.10)] px-4 md:px-8 py-5 shrink-0">
+      <header className="bg-white border-b border-[rgba(15,15,15,0.10)] px-4 md:px-6 py-4 shrink-0">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="font-display font-extrabold text-2xl">
+            <h1 className="font-display font-extrabold text-xl">
               Create New Job
             </h1>
             <p className="font-body text-sm text-[#6B6560] mt-0.5">
@@ -172,14 +201,14 @@ export default function JobCreationPage() {
             <button
               type="button"
               onClick={handleSaveDraft}
-              className="px-4 py-2.5 font-body text-sm text-[#6B6560] hover:text-[#0F0F0F]"
+              className="px-3 py-2 font-body text-xs text-[#6B6560] hover:text-[#0F0F0F]"
             >
               Save Draft
             </button>
             <button
               type="button"
               onClick={() => router.push(ROUTES.jobs)}
-              className="px-4 py-2.5 font-body text-sm text-[#FF4D2E]"
+              className="px-3 py-2 font-body text-xs text-[#FF4D2E]"
             >
               Cancel
             </button>
@@ -187,16 +216,16 @@ export default function JobCreationPage() {
         </div>
       </header>
 
-      <div className="bg-white border-b px-4 md:px-8 py-4">
+      <div className="bg-white border-b px-4 md:px-6 py-3">
         <StepIndicator steps={STEPS} currentStep={step} />
       </div>
 
-      <div className="flex-1 overflow-auto p-4 md:p-8">
+      <div className="flex-1 overflow-auto p-4 md:p-5">
         {step === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-[680px] mx-auto bg-white rounded-2xl border p-8 space-y-5"
+            className="max-w-[640px] mx-auto bg-white rounded-xl border p-6 space-y-4"
           >
             <div>
               <label className="font-body text-xs font-semibold uppercase text-[#6B6560]">
@@ -211,7 +240,7 @@ export default function JobCreationPage() {
                     slug: slugify(e.target.value),
                   })
                 }
-                className="mt-1 w-full px-4 py-3 rounded-xl border focus:border-[#C8F135] outline-none"
+                className="mt-1 w-full px-3 py-2.5 rounded-lg border focus:border-[#C8F135] outline-none text-sm"
                 placeholder="Senior Frontend Engineer"
               />
             </div>
@@ -225,7 +254,7 @@ export default function JobCreationPage() {
                   onChange={(e) =>
                     setForm({ ...form, company: e.target.value })
                   }
-                  className="mt-1 w-full px-4 py-3 rounded-xl border focus:border-[#C8F135] outline-none"
+                  className="mt-1 w-full px-3 py-2.5 rounded-lg border focus:border-[#C8F135] outline-none text-sm"
                 />
               </div>
               <div>
@@ -237,7 +266,7 @@ export default function JobCreationPage() {
                   onChange={(e) =>
                     setForm({ ...form, location: e.target.value })
                   }
-                  className="mt-1 w-full px-4 py-3 rounded-xl border focus:border-[#C8F135] outline-none"
+                  className="mt-1 w-full px-3 py-2.5 rounded-lg border focus:border-[#C8F135] outline-none text-sm"
                 />
               </div>
             </div>
@@ -251,7 +280,7 @@ export default function JobCreationPage() {
                   onChange={(e) =>
                     setForm({ ...form, type: e.target.value as JobType })
                   }
-                  className="mt-1 w-full px-4 py-3 rounded-xl border"
+                  className="mt-1 w-full px-3 py-2.5 rounded-lg border text-sm"
                 >
                   <option value="full-time">Full-time</option>
                   <option value="part-time">Part-time</option>
@@ -266,7 +295,7 @@ export default function JobCreationPage() {
                 <input
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  className="mt-1 w-full px-4 py-3 rounded-xl border font-mono text-sm"
+                  className="mt-1 w-full px-3 py-2.5 rounded-lg border font-mono text-sm"
                 />
               </div>
             </div>
@@ -277,7 +306,7 @@ export default function JobCreationPage() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-[680px] mx-auto bg-white rounded-2xl border p-8"
+            className="max-w-[640px] mx-auto bg-white rounded-xl border p-6"
           >
             <label className="font-body text-xs font-semibold uppercase text-[#6B6560]">
               Job description *
@@ -288,14 +317,14 @@ export default function JobCreationPage() {
                 setForm({ ...form, description: e.target.value })
               }
               rows={12}
-              className="mt-2 w-full px-4 py-3 rounded-xl border focus:border-[#C8F135] outline-none font-body text-sm"
+              className="mt-2 w-full px-3 py-2.5 rounded-lg border focus:border-[#C8F135] outline-none font-body text-sm"
               placeholder="Paste or write the full job description…"
             />
             <button
               type="button"
               onClick={handleAnalyze}
               disabled={analyzing}
-              className="mt-4 flex items-center gap-2 px-5 py-3 bg-[#0057FF] text-white rounded-xl font-body text-sm font-medium disabled:opacity-50"
+              className="mt-4 flex items-center gap-1.5 px-4 py-2.5 bg-[#0057FF] text-white rounded-lg font-body text-xs font-medium disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
               {analyzing ? "Analyzing…" : "Analyze with MiniMax"}
@@ -303,10 +332,18 @@ export default function JobCreationPage() {
           </motion.div>
         )}
 
-        {step === 2 && <MiniMaxAnalysis questions={form.questions} />}
+        {step === 2 && (
+          <MiniMaxAnalysis
+            analysis={analysis}
+            questions={form.questions}
+            onQuestionsChange={(questions) =>
+              setForm((f) => ({ ...f, questions }))
+            }
+          />
+        )}
 
         {step === 3 && (
-          <div className="max-w-[680px] mx-auto bg-white rounded-2xl border p-8 text-center">
+          <div className="max-w-[640px] mx-auto bg-white rounded-xl border p-6 text-center">
             <h2 className="font-display font-bold text-xl mb-4">Ready to publish?</h2>
             <p className="font-body text-[#6B6560] mb-6">
               {form.title} at {form.company} · {form.questions.length} screening
@@ -316,7 +353,7 @@ export default function JobCreationPage() {
               type="button"
               onClick={handlePublish}
               disabled={publishing || !draftJobId}
-              className="px-8 py-4 bg-[#C8F135] rounded-full font-display font-semibold text-lg disabled:opacity-50"
+              className="px-6 py-3 bg-[#C8F135] rounded-full font-display font-semibold text-sm disabled:opacity-50"
             >
               {publishing ? "Publishing…" : "Publish job"}
             </button>
@@ -325,12 +362,12 @@ export default function JobCreationPage() {
       </div>
 
       {step < 3 && !publishedSlug && (
-        <footer className="bg-white border-t px-4 md:px-8 py-4 flex justify-between max-w-[1000px] mx-auto w-full">
+        <footer className="bg-white border-t px-4 md:px-6 py-3 flex justify-between max-w-[1000px] mx-auto w-full">
           <button
             type="button"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0}
-            className="flex items-center gap-2 px-5 py-3 text-sm text-[#6B6560] disabled:opacity-40"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs text-[#6B6560] disabled:opacity-40"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -339,11 +376,21 @@ export default function JobCreationPage() {
             type="button"
             onClick={() => {
               if (step === 1) handleAnalyze();
+              else if (step === 2) handleSaveQuestionsAndContinue();
               else setStep((s) => Math.min(3, s + 1));
             }}
-            className="flex items-center gap-2 px-6 py-3 bg-[#C8F135] rounded-xl font-semibold text-sm"
+            disabled={savingQuestions || (step === 1 && analyzing)}
+            className="flex items-center gap-1.5 px-5 py-2.5 bg-[#C8F135] rounded-lg font-semibold text-xs disabled:opacity-50"
           >
-            {step === 1 ? "Analyze" : "Continue"}
+            {step === 1
+              ? analyzing
+                ? "Analyzing…"
+                : "Analyze"
+              : step === 2
+                ? savingQuestions
+                  ? "Saving…"
+                  : "Save & continue"
+                : "Continue"}
             <ArrowRight className="w-4 h-4" />
           </button>
         </footer>

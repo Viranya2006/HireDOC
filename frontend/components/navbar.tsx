@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useState } from 'react'
+import { Logo } from '@/components/logo'
 
 const navLinks = [
   { label: 'How it Works', href: '#how-it-works' },
@@ -18,12 +19,12 @@ export function Navbar() {
       initial={{ y: -16, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 bg-[#F5F0E8] border-b border-[rgba(15,15,15,0.10)]"
+      className="fixed top-0 left-0 right-0 z-50 bg-[#F6F7F9] border-b border-[rgba(15,15,15,0.10)]"
     >
       <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[#C8F135] rounded-sm" />
+          <Logo size="sm" priority />
           <span className="font-display font-bold text-[#0F0F0F] text-lg">HireDoc AI</span>
         </Link>
 

@@ -8,11 +8,13 @@ import { HowItWorks } from '@/components/how-it-works'
 import { Features } from '@/components/features'
 import { CTABanner } from '@/components/cta-banner'
 import { Footer } from '@/components/footer'
+import { ScrollExperience } from '@/components/scroll-experience'
 
 export default function Home() {
   return (
     <LenisProvider>
-      <main className="min-h-screen bg-[#F5F0E8]">
+      <main className="min-h-screen bg-[#F6F7F9]">
+        <ScrollExperience />
         <Navbar />
         <Hero />
         <StatBar />

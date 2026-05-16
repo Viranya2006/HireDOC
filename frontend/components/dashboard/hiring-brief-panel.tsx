@@ -1,60 +1,25 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { X, Check, AlertTriangle } from "lucide-react";
 import type { Candidate } from "@/lib/types/application";
 import { ScoreRing } from "@/components/score-ring";
 import { SkillChip } from "@/components/skill-chip";
+import {
+  QuestionsEditor,
+  normalizeQuestions,
+} from "@/components/dashboard/questions-editor";
+import { CandidateScreeningResponses } from "@/components/dashboard/candidate-screening-responses";
+import { CandidateInterviewQuestions } from "@/components/dashboard/candidate-interview-questions";
 
 interface HiringBriefPanelProps {
   candidate: Candidate;
   onClose: () => void;
   onShortlist: () => void;
   onReject: () => void;
+  onInterviewQuestionsSave?: (questions: string[]) => Promise<void>;
   actionsDisabled?: boolean;
-}
-
-function LargeScoreRing({ score }: { score: number }) {
-  const size = 80;
-  const radius = (size - 6) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (score / 100) * circumference;
-
-  const getColor = (score: number) => {
-    if (score >= 80) return "#00C896";
-    if (score >= 60) return "#0057FF";
-    return "#FF4D2E";
-  };
-
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="transform -rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(15,15,15,0.08)"
-          strokeWidth="5"
-        />
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={getColor(score)}
-          strokeWidth="5"
-          strokeLinecap="round"
-          initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: circumference - progress }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center font-data font-bold text-[#0F0F0F] text-[32px]">
-        {score}
-      </span>
-    </div>
-  );
 }
 
 export function HiringBriefPanel({
@@ -62,27 +27,58 @@ export function HiringBriefPanel({
   onClose,
   onShortlist,
   onReject,
+  onInterviewQuestionsSave,
   actionsDisabled = false,
 }: HiringBriefPanelProps) {
+  const [interviewQuestions, setInterviewQuestions] = useState(
+    candidate.questions,
+  );
+  const [savingQuestions, setSavingQuestions] = useState(false);
+  const [editingQuestions, setEditingQuestions] = useState(false);
+
+  useEffect(() => {
+    setInterviewQuestions(candidate.questions);
+    setEditingQuestions(false);
+  }, [candidate.id, candidate.questions]);
+
+  const questionsDirty =
+    JSON.stringify(normalizeQuestions(interviewQuestions)) !==
+    JSON.stringify(normalizeQuestions(candidate.questions));
+
+  const handleSaveQuestions = async () => {
+    if (!onInterviewQuestionsSave) return;
+    const cleaned = normalizeQuestions(interviewQuestions);
+    if (cleaned.length === 0) {
+      return;
+    }
+    setSavingQuestions(true);
+    try {
+      await onInterviewQuestionsSave(cleaned);
+      setEditingQuestions(false);
+    } finally {
+      setSavingQuestions(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ x: 40, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 40, opacity: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="w-[380px] bg-white rounded-xl overflow-hidden flex flex-col shrink-0 h-full"
+      className="w-[360px] bg-white rounded-xl border border-[rgba(15,15,15,0.08)] overflow-hidden flex flex-col shrink-0 h-full"
     >
       {/* Header */}
-      <div className="p-5 border-b border-[rgba(15,15,15,0.10)]">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#0057FF] flex items-center justify-center">
+      <div className="p-4 border-b border-[rgba(15,15,15,0.10)]">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-full bg-[#0057FF] flex items-center justify-center">
               <span className="font-body text-white text-sm font-semibold">
                 {candidate.initials}
               </span>
             </div>
             <div>
-              <h3 className="font-display font-extrabold text-[#0F0F0F] text-lg">
+              <h3 className="font-display font-extrabold text-[#0F0F0F] text-base">
                 {candidate.name}
               </h3>
               <p className="font-body text-[#6B6560] text-sm">{candidate.role}</p>
@@ -94,7 +90,7 @@ export function HiringBriefPanel({
             </p>
             <button
               onClick={onClose}
-              className="mt-1 p-1 hover:bg-[#F5F0E8] rounded transition-colors"
+              className="mt-1 p-1 hover:bg-[#F6F7F9] rounded transition-colors"
             >
               <X className="w-4 h-4 text-[#6B6560]" />
             </button>
@@ -102,8 +98,8 @@ export function HiringBriefPanel({
         </div>
 
         {/* Score */}
-        <div className="flex items-center gap-4">
-          <ScoreRing score={candidate.score} size={80} />
+        <div className="flex items-center gap-3">
+          <ScoreRing score={candidate.score} size={68} />
           <div>
             <p className="font-body text-[#6B6560] text-sm">Fit Score</p>
             <p className="font-data font-bold text-[#0F0F0F] text-lg">
@@ -114,7 +110,7 @@ export function HiringBriefPanel({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-5 space-y-5">
+      <div className="flex-1 overflow-auto p-4 space-y-4">
         {/* Matching Skills */}
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -179,31 +175,92 @@ export function HiringBriefPanel({
           </p>
         </div>
 
+        {candidate.answers && candidate.answers.length > 0 && (
+          <CandidateScreeningResponses
+            answers={candidate.answers}
+            title="Screening Q&A"
+            compact
+          />
+        )}
+
         {/* Interview Questions */}
         <div>
-          <h4 className="font-display font-bold text-[#0F0F0F] text-sm mb-3">
-            Interview Questions
-          </h4>
-          <ol className="space-y-2">
-            {candidate.questions.map((question, index) => (
-              <li key={index} className="flex gap-2">
-                <span className="font-data text-[#C8F135] text-sm font-bold shrink-0">
-                  {index + 1}.
-                </span>
-                <p className="font-body text-[#0F0F0F] text-sm">{question}</p>
-              </li>
-            ))}
-          </ol>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <h4 className="font-display font-bold text-[#0F0F0F] text-sm">
+              Interview Questions
+            </h4>
+            {onInterviewQuestionsSave && candidate.questions.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (editingQuestions) {
+                    if (questionsDirty) {
+                      setInterviewQuestions(candidate.questions);
+                    }
+                    setEditingQuestions(false);
+                  } else {
+                    setEditingQuestions(true);
+                  }
+                }}
+                className="font-body text-xs text-[#0057FF] hover:underline"
+              >
+                {editingQuestions ? "Close" : "Customize"}
+              </button>
+            )}
+          </div>
+
+          {editingQuestions && onInterviewQuestionsSave ? (
+            <div className="space-y-3">
+              <QuestionsEditor
+                title=""
+                hideHeader
+                questions={interviewQuestions}
+                onChange={setInterviewQuestions}
+                addLabel="Add interview question"
+                placeholder="e.g. Walk me through a challenging project…"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveQuestions}
+                  disabled={
+                    savingQuestions ||
+                    !questionsDirty ||
+                    normalizeQuestions(interviewQuestions).length === 0
+                  }
+                  className="flex-1 py-2 bg-[#0057FF] text-white rounded-lg font-body text-xs font-semibold disabled:opacity-50"
+                >
+                  {savingQuestions ? "Saving…" : "Save questions"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInterviewQuestions(candidate.questions);
+                    setEditingQuestions(false);
+                  }}
+                  className="px-3 py-2 border rounded-lg font-body text-xs text-[#6B6560]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <CandidateInterviewQuestions
+              questions={candidate.questions}
+              title=""
+              compact
+            />
+          )}
         </div>
       </div>
 
       {/* Actions */}
-      <div className="p-5 border-t border-[rgba(15,15,15,0.10)] flex gap-3">
+      <div className="p-4 border-t border-[rgba(15,15,15,0.10)] flex gap-2.5">
         <button
           type="button"
           onClick={onShortlist}
           disabled={actionsDisabled}
-          className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#C8F135] rounded-xl font-body text-[#0F0F0F] text-sm font-semibold hover:bg-[#b8e125] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#C8F135] rounded-lg font-body text-[#0F0F0F] text-xs font-semibold hover:bg-[#b8e125] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Check className="w-4 h-4" />
           Shortlist
@@ -212,7 +269,7 @@ export function HiringBriefPanel({
           type="button"
           onClick={onReject}
           disabled={actionsDisabled}
-          className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-[#FF4D2E] rounded-xl font-body text-[#FF4D2E] text-sm font-semibold hover:bg-[#FF4D2E]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 border border-[#FF4D2E] rounded-lg font-body text-[#FF4D2E] text-xs font-semibold hover:bg-[#FF4D2E]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="w-4 h-4" />
           Reject

@@ -38,7 +38,7 @@ export function HeroCard() {
       animate={{ 
         opacity: 1, 
         x: 0,
-        y: [0, -10, 0],
+        y: [0, -6, 0],
       }}
       transition={{
         opacity: { duration: 0.6, delay: 1.2, ease: [0.16, 1, 0.3, 1] },
@@ -53,10 +53,10 @@ export function HeroCard() {
         transformStyle: 'preserve-3d',
         perspective: '800px',
       }}
-      className="w-full max-w-[460px] bg-white rounded-[20px] shadow-[0_8px_40px_rgba(15,15,15,0.10)] border border-[rgba(15,15,15,0.06)] p-6"
+      className="w-full max-w-[420px] lg:max-w-[400px] xl:max-w-[440px] bg-white rounded-[20px] shadow-[0_8px_40px_rgba(15,15,15,0.10)] border border-[rgba(15,15,15,0.06)] p-5 lg:p-5"
     >
       {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-full bg-[#0F0F0F] flex items-center justify-center">
           <span className="text-[#F5F0E8] font-display font-bold text-sm">AK</span>
         </div>
@@ -68,16 +68,16 @@ export function HeroCard() {
       </div>
 
       {/* Score */}
-      <div className="flex items-center gap-4 mb-5 pb-5 border-b border-[rgba(15,15,15,0.08)]">
-        <ScoreRing score={87} />
+      <div className="flex items-center gap-3 mb-4 pb-4 border-b border-[rgba(15,15,15,0.08)]">
+        <ScoreRing score={87} size={64} />
         <div>
           <p className="font-body text-[#6B6560] text-sm">Fit Score</p>
-          <p className="font-data font-bold text-[#0F0F0F] text-lg">87/100 Match</p>
+          <p className="font-data font-bold text-[#0F0F0F] text-base">87/100 Match</p>
         </div>
       </div>
 
       {/* Matching Skills */}
-      <div className="mb-4">
+      <div className="mb-3">
         <p className="font-body font-semibold text-[11px] uppercase tracking-wide text-[#00C896] mb-2 flex items-center gap-1">
           <span>✓</span> Matching Skills
         </p>
@@ -96,7 +96,7 @@ export function HeroCard() {
       </div>
 
       {/* Gaps */}
-      <div className="mb-4">
+      <div className="mb-3">
         <p className="font-body font-semibold text-[11px] uppercase tracking-wide text-[#FF4D2E] mb-2 flex items-center gap-1">
           <span>⚠</span> Gaps
         </p>

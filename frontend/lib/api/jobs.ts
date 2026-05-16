@@ -31,7 +31,10 @@ export async function getJobs(): Promise<Job[]> {
     auth: true,
   });
   return jobs.map((j) =>
-    mapJobFromBackend(j, { applicationCount: j.application_count }),
+    mapJobFromBackend(j, {
+      applicationCount: j.application_count,
+      questionCount: j.question_count,
+    }),
   );
 }
 

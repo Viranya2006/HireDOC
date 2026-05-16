@@ -163,7 +163,34 @@ export const getApplicationDetail = async (req: Request, res: Response) => {
   if (!application)
     return res.status(404).json({ error: "Application not found" });
 
-  res.json({ application });
+  const questions = await Question.find({ job_id: job._id })
+    .sort({ order_index: 1 })
+    .lean();
+
+  const rawAnswers = application.answers as
+    | Record<string, string>
+    | Map<string, string>
+    | undefined;
+  const answerMap: Record<string, string> =
+    rawAnswers instanceof Map
+      ? Object.fromEntries(rawAnswers)
+      : { ...(rawAnswers ?? {}) };
+
+  const screening_responses = questions.map((q) => {
+    const questionId = q._id.toString();
+    return {
+      question_id: questionId,
+      question_text: q.question_text,
+      answer: answerMap[questionId] ?? "",
+    };
+  });
+
+  res.json({
+    application: {
+      ...application,
+      screening_responses,
+    },
+  });
 };
 
 export const updateApplicationDecision = async (
@@ -216,6 +243,57 @@ export const updateApplicationDecision = async (
     });
   }
 
+  await application.save();
+
+  res.json({ application: application.toObject() });
+};
+
+export const updateInterviewQuestions = async (
+  req: Request,
+  res: Response,
+) => {
+  const { job_id, application_id } = req.params;
+  const { questions } = req.body as { questions: string[] };
+
+  if (!Array.isArray(questions) || questions.length === 0) {
+    return res.status(400).json({
+      error: "questions must be a non-empty array of strings",
+    });
+  }
+
+  const cleaned = questions
+    .map((q) => String(q).trim())
+    .filter(Boolean);
+  if (cleaned.length === 0) {
+    return res.status(400).json({
+      error: "At least one non-empty question is required",
+    });
+  }
+
+  const job = await Job.findOne({
+    _id: job_id,
+    recruiter_id: req.recruiter!._id,
+  });
+  if (!job) return res.status(404).json({ error: "Job not found" });
+
+  const application = await Application.findOne({
+    _id: application_id,
+    job_id: job._id,
+  });
+  if (!application)
+    return res.status(404).json({ error: "Application not found" });
+
+  if (!application.ai_summary) {
+    return res.status(400).json({
+      error: "Interview questions are not available until AI scoring completes",
+    });
+  }
+
+  application.ai_summary = {
+    ...application.ai_summary,
+    suggested_interview_questions: cleaned,
+  };
+  application.markModified("ai_summary");
   await application.save();
 
   res.json({ application: application.toObject() });

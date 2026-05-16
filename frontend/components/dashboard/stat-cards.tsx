@@ -40,33 +40,29 @@ const cards = [
   {
     key: "totalApplicants",
     label: "TOTAL APPLICANTS",
-    borderColor: "#0057FF",
     getValue: (stats: StatCardsProps["stats"]) => stats.totalApplicants,
   },
   {
     key: "avgFitScore",
     label: "AVG FIT SCORE",
-    borderColor: "#00C896",
     getValue: (stats: StatCardsProps["stats"]) => stats.avgFitScore,
   },
   {
     key: "topScore",
     label: "TOP SCORE",
-    borderColor: "#C8F135",
     getValue: (stats: StatCardsProps["stats"]) => stats.topScore.score,
     getSubtext: (stats: StatCardsProps["stats"]) => stats.topScore.name,
   },
   {
     key: "appliedToday",
     label: "APPLIED TODAY",
-    borderColor: "#FF4D2E",
     getValue: (stats: StatCardsProps["stats"]) => stats.appliedToday,
   },
 ];
 
 export function StatCards({ stats }: StatCardsProps) {
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-4 gap-3">
       {cards.map((card, index) => (
         <motion.div
           key={card.key}
@@ -77,13 +73,12 @@ export function StatCards({ stats }: StatCardsProps) {
             duration: 0.5,
             ease: [0.16, 1, 0.3, 1],
           }}
-          className="bg-white rounded-xl p-5 relative overflow-hidden"
-          style={{ borderTop: `3px solid ${card.borderColor}` }}
+          className="bg-white rounded-xl border border-[rgba(15,15,15,0.08)] p-4 relative overflow-hidden"
         >
-          <p className="font-body text-[#6B6560] text-[11px] font-semibold tracking-wider uppercase mb-2">
+          <p className="font-body text-[#6B6560] text-[10px] font-semibold tracking-wider uppercase mb-1.5">
             {card.label}
           </p>
-          <p className="font-data font-bold text-[#0F0F0F] text-[36px] leading-none">
+          <p className="font-data font-bold text-[#0F0F0F] text-[30px] leading-none">
             <AnimatedNumber value={card.getValue(stats)} delay={400 + index * 100} />
           </p>
           {card.getSubtext && (

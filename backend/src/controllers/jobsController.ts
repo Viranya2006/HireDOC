@@ -49,17 +49,30 @@ export const getMyJobs = async (req: Request, res: Response) => {
     .sort({ created_at: -1 })
     .lean();
 
-  const counts = await Application.aggregate([
-    { $match: { job_id: { $in: jobs.map((j) => j._id) } } },
-    { $group: { _id: "$job_id", count: { $sum: 1 } } },
+  const jobIds = jobs.map((j) => j._id);
+
+  const [applicationCounts, questionCounts] = await Promise.all([
+    Application.aggregate([
+      { $match: { job_id: { $in: jobIds } } },
+      { $group: { _id: "$job_id", count: { $sum: 1 } } },
+    ]),
+    Question.aggregate([
+      { $match: { job_id: { $in: jobIds } } },
+      { $group: { _id: "$job_id", count: { $sum: 1 } } },
+    ]),
   ]);
-  const countMap = Object.fromEntries(
-    counts.map((c) => [c._id.toString(), c.count]),
+
+  const applicationCountMap = Object.fromEntries(
+    applicationCounts.map((c) => [c._id.toString(), c.count]),
+  );
+  const questionCountMap = Object.fromEntries(
+    questionCounts.map((c) => [c._id.toString(), c.count]),
   );
 
   const result = jobs.map((j) => ({
     ...j,
-    application_count: countMap[j._id.toString()] || 0,
+    application_count: applicationCountMap[j._id.toString()] || 0,
+    question_count: questionCountMap[j._id.toString()] || 0,
   }));
   res.json({ jobs: result });
 };

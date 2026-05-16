@@ -9,8 +9,10 @@ import { StatCards } from "@/components/dashboard/stat-cards";
 import { CandidateTable } from "@/components/dashboard/candidate-table";
 import { HiringBriefPanel } from "@/components/dashboard/hiring-brief-panel";
 import {
+  getCandidateById,
   getCandidatesForJob,
   updateCandidateDecision,
+  updateInterviewQuestions,
 } from "@/lib/api/applications";
 import { ApiError } from "@/lib/api/client";
 import { toast } from "sonner";
@@ -48,11 +50,15 @@ function DashboardContent() {
       if (cancelled) return;
       setJob(jobData);
       setCandidates(candidateList);
-      setSelectedCandidate((prev) =>
-        prev && candidateList.some((c) => c.id === prev.id)
-          ? prev
-          : (candidateList[0] ?? null),
-      );
+      setSelectedCandidate((prev) => {
+        const nextId =
+          prev && candidateList.some((c) => c.id === prev.id)
+            ? prev.id
+            : candidateList[0]?.id;
+        if (!nextId) return null;
+        if (prev?.id === nextId && prev.answers?.length) return prev;
+        return candidateList.find((c) => c.id === nextId) ?? null;
+      });
       setLoading(false);
 
       const pending = candidateList.some((c) => c.score === 0);
@@ -76,6 +82,21 @@ function DashboardContent() {
       if (pollTimer) clearInterval(pollTimer);
     };
   }, [jobId]);
+
+  useEffect(() => {
+    if (!jobId || !selectedCandidate?.id) return;
+
+    let cancelled = false;
+    getCandidateById(selectedCandidate.id, jobId).then((detail) => {
+      if (!cancelled && detail) {
+        setSelectedCandidate(detail);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [jobId, selectedCandidate?.id]);
 
   const applyCandidateUpdate = (updated: Candidate) => {
     setCandidates((list) =>
@@ -150,7 +171,7 @@ function DashboardContent() {
         </p>
         <Link
           href={ROUTES.jobsNew}
-          className="px-5 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-sm"
+          className="px-4 py-2 bg-[#C8F135] rounded-full font-display font-semibold text-xs"
         >
           Create a job
         </Link>
@@ -173,10 +194,10 @@ function DashboardContent() {
         applicantCount={stats.totalApplicants}
       />
 
-      <main className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="flex flex-col xl:flex-row gap-6 min-h-0">
+      <main className="flex-1 overflow-auto p-4 md:p-5">
+        <div className="flex flex-col xl:flex-row gap-5 min-h-0">
           <div
-            className={`flex flex-col gap-6 transition-all duration-300 ${
+            className={`flex flex-col gap-5 transition-all duration-300 ${
               selectedCandidate ? "flex-1" : "w-full"
             }`}
           >
@@ -204,6 +225,15 @@ function DashboardContent() {
                   onShortlist={() => handleDecision("shortlisted")}
                   onReject={() => handleDecision("rejected")}
                   actionsDisabled={decisionLoading}
+                  onInterviewQuestionsSave={async (questions) => {
+                    const updated = await updateInterviewQuestions(
+                      jobId,
+                      selectedCandidate.id,
+                      questions,
+                    );
+                    applyCandidateUpdate(updated);
+                    toast.success("Interview questions updated");
+                  }}
                 />
               </div>
             )}

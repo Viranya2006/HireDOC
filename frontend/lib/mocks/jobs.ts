@@ -36,6 +36,7 @@ You'll collaborate closely with designers, product managers, and backend enginee
     postedAt: "Jan 15, 2024",
     expiresAt: "Feb 15, 2024",
     applicants: 47,
+    questionCount: 5,
     shortlisted: 8,
   },
   {
@@ -52,6 +53,7 @@ You'll collaborate closely with designers, product managers, and backend enginee
     postedAt: "Jan 18, 2024",
     expiresAt: "Feb 18, 2024",
     applicants: 32,
+    questionCount: 1,
     shortlisted: 5,
   },
   {
@@ -68,6 +70,7 @@ You'll collaborate closely with designers, product managers, and backend enginee
     postedAt: "Jan 20, 2024",
     expiresAt: "Feb 20, 2024",
     applicants: 28,
+    questionCount: 1,
     shortlisted: 4,
   },
   {
@@ -82,6 +85,7 @@ You'll collaborate closely with designers, product managers, and backend enginee
     questions: [],
     status: "draft",
     applicants: 19,
+    questionCount: 0,
     shortlisted: 3,
   },
   {
@@ -98,6 +102,7 @@ You'll collaborate closely with designers, product managers, and backend enginee
     postedAt: "Dec 1, 2023",
     expiresAt: "Jan 1, 2024",
     applicants: 56,
+    questionCount: 0,
     shortlisted: 12,
   },
 ];

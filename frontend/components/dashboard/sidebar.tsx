@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard,
   Users,
   Briefcase,
+  ListChecks,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -15,10 +15,11 @@ import { useAuth } from "@/providers/auth-provider";
 import { getJobs } from "@/lib/api/jobs";
 import type { Job } from "@/lib/types/job";
 import { ROUTES } from "@/lib/constants/routes";
+import { Logo } from "@/components/logo";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Briefcase, label: "All Jobs", path: "/jobs" },
+  { icon: ListChecks, label: "Questions", path: "/jobs/questions" },
   { icon: Users, label: "Candidates", path: "/dashboard" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
@@ -35,26 +36,22 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
 
   const jobId = searchParams.get("jobId") || jobs[0]?.id || "";
-  const selectedJob = jobs.find((j) => j.id === jobId) ?? jobs[0];
 
   useEffect(() => {
     getJobs().then(setJobs);
   }, []);
 
   const hrefWithJob = (path: string) => {
-    if (path === "/jobs" || path === "/dashboard/settings") return path;
-    return `${path}?jobId=${jobId}`;
-  };
-
-  const handleJobChange = (newJobId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("jobId", newJobId);
-    if (pathname.startsWith("/dashboard")) {
-      router.push(`/dashboard?${params.toString()}`);
-    } else {
-      router.push(`${pathname}?${params.toString()}`);
+    if (
+      path === "/jobs" ||
+      path === "/jobs/questions" ||
+      path === "/dashboard/settings"
+    ) {
+      return path === "/jobs/questions" && jobId
+        ? `${path}?jobId=${jobId}`
+        : path;
     }
-    onNavigate?.();
+    return `${path}?jobId=${jobId}`;
   };
 
   const handleSignOut = async () => {
@@ -64,7 +61,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   };
 
   const displayName =
-    recruiter?.organization_name ||
+    recruiter?.full_name?.trim() ||
+    recruiter?.organization_name?.trim() ||
     recruiter?.email?.split("@")[0] ||
     "Recruiter";
   const initials = displayName
@@ -76,46 +74,32 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   return (
     <motion.aside
-      initial={{ x: -280, opacity: 0 }}
+      initial={{ x: -248, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="w-[280px] h-screen bg-white border-r border-[rgba(15,15,15,0.10)] flex flex-col shrink-0 md:fixed left-0 top-0 z-20"
+      className="w-[248px] h-screen bg-white border-r border-[rgba(15,15,15,0.10)] flex flex-col shrink-0 md:fixed left-0 top-0 z-20"
     >
-      <div className="p-6 border-b border-[rgba(15,15,15,0.10)]">
+      <div className="p-5">
         <Link href="/" className="flex items-center gap-3" onClick={onNavigate}>
-          <div className="w-10 h-10 bg-[#C8F135] rounded-lg flex items-center justify-center">
-            <span className="font-display font-bold text-[#0F0F0F] text-sm">
-              H
-            </span>
-          </div>
-          <span className="font-display font-bold text-[#0F0F0F] text-lg">
+          <Logo size="lg" />
+          <span className="font-display font-bold text-[#0F0F0F] text-base">
             HireDoc AI
           </span>
         </Link>
       </div>
 
-      <div className="px-4 py-4">
-        <select
-          value={selectedJob?.id ?? jobId}
-          onChange={(e) => handleJobChange(e.target.value)}
-          className="w-full px-4 py-3 bg-[#F5F0E8] rounded-xl font-body text-sm font-medium text-[#0F0F0F] border-0 focus:outline-none focus:ring-2 focus:ring-[#C8F135] cursor-pointer"
-        >
-          {jobs.map((job) => (
-            <option key={job.id} value={job.id}>
-              {job.title}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <nav className="flex-1 px-3 py-2">
+      <nav className="flex-1 px-3 py-4">
         {navItems.map((item, index) => {
           const href = hrefWithJob(item.path);
           const isActive =
             pathname === item.path ||
             (item.path === "/dashboard" &&
               pathname === "/dashboard") ||
-            (item.path === "/jobs" && pathname.startsWith("/jobs")) ||
+            (item.path === "/jobs" &&
+              pathname.startsWith("/jobs") &&
+              pathname !== "/jobs/questions") ||
+            (item.path === "/jobs/questions" &&
+              pathname === "/jobs/questions") ||
             (item.path === "/dashboard/settings" &&
               pathname === "/dashboard/settings");
 
@@ -133,16 +117,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               <Link
                 href={href}
                 onClick={onNavigate}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg mb-1 transition-all ${
                   isActive
-                    ? "bg-[rgba(200,241,53,0.08)] border-l-[3px] border-[#C8F135] text-[#0F0F0F]"
-                    : "text-[#6B6560] hover:bg-[#F5F0E8] hover:text-[#0F0F0F]"
+                    ? "bg-[#C8F135] text-[#0F0F0F]"
+                    : "text-[#6B6560] hover:bg-[#F6F7F9] hover:text-[#0F0F0F]"
                 }`}
               >
                 <item.icon
-                  className={`w-5 h-5 ${isActive ? "text-[#C8F135]" : ""}`}
+                  className={`w-4 h-4 ${isActive ? "text-[#0F0F0F]" : ""}`}
                 />
-                <span className="font-body text-sm font-medium">
+                <span className="font-body text-[13px] font-medium">
                   {item.label}
                 </span>
               </Link>
@@ -155,16 +139,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <Link
           href={ROUTES.jobsNew}
           onClick={onNavigate}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#C8F135] rounded-xl font-display font-semibold text-sm text-[#0F0F0F] hover:scale-[1.02] transition-transform"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#C8F135] rounded-lg font-display font-semibold text-[13px] text-[#0F0F0F] hover:scale-[1.02] transition-transform"
         >
-          <span className="text-lg">+</span>
+          <span className="text-base">+</span>
           Create New Job
         </Link>
       </div>
 
-      <div className="p-4 border-t border-[rgba(15,15,15,0.10)]">
+      <div className="p-4">
         <div className="flex items-center gap-3 px-2 py-2">
-          <div className="w-10 h-10 rounded-full bg-[#0057FF] flex items-center justify-center">
+          <div className="w-9 h-9 rounded-full bg-[#0057FF] flex items-center justify-center">
             <span className="font-body text-white text-sm font-semibold">
               {initials}
             </span>

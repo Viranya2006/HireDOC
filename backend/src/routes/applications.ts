@@ -6,6 +6,7 @@ import {
   getApplicationsForJob,
   getApplicationDetail,
   updateApplicationDecision,
+  updateInterviewQuestions,
 } from "../controllers/applicationsController";
 import { authMiddleware } from "../middleware/auth";
 
@@ -41,5 +42,9 @@ router.get("/job/:job_id/:application_id", getApplicationDetail);
 router.post(
   "/job/:job_id/:application_id/decision",
   updateApplicationDecision,
+);
+router.put(
+  "/job/:job_id/:application_id/interview-questions",
+  updateInterviewQuestions,
 );
 export default router;
