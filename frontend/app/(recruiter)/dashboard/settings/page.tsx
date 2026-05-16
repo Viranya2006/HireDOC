@@ -1,10 +1,88 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import {
+  useAuth,
+  getAuthErrorMessage,
+} from "@/providers/auth-provider";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
+  const {
+    firebaseUser,
+    recruiter,
+    changePassword,
+    sendPasswordReset,
+    isConfigured,
+  } = useAuth();
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [resetEmailLoading, setResetEmailLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const hasPasswordProvider = firebaseUser?.providerData.some(
+    (p) => p.providerId === "password",
+  );
+  const accountEmail = firebaseUser?.email ?? recruiter?.email ?? "";
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Fill in all password fields");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (newPassword === currentPassword) {
+      toast.error("New password must be different from your current password");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("Password updated successfully");
+    } catch (err) {
+      toast.error(getAuthErrorMessage(err));
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleSendPasswordResetEmail = async () => {
+    if (!accountEmail) {
+      toast.error("No email on file for this account");
+      return;
+    }
+    setResetEmailLoading(true);
+    try {
+      await sendPasswordReset(accountEmail);
+      toast.success(
+        "If an account exists for that email, we sent a link to set or reset your password.",
+      );
+    } catch (err) {
+      toast.error(getAuthErrorMessage(err));
+    } finally {
+      setResetEmailLoading(false);
+    }
+  };
 
   const tabs = [
     { id: "profile", label: "Profile" },
@@ -135,24 +213,55 @@ export default function SettingsPage() {
                 <h2 className="font-display font-bold text-[#0F0F0F] text-lg mb-6">
                   Change Password
                 </h2>
-                <div className="grid grid-cols-3 gap-6">
+                {!isConfigured ? (
+                  <p className="font-body text-sm text-[#6B6560]">
+                    Firebase is not configured. Password changes are unavailable.
+                  </p>
+                ) : hasPasswordProvider ? (
+                  <form onSubmit={handleChangePassword} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                       Current Password
                     </label>
-                    <input
-                      type="password"
-                      placeholder="Enter current password"
-                      className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Enter current password"
+                        autoComplete="current-password"
+                        className="w-full px-4 py-3 pr-11 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#6B6560] hover:text-[#0F0F0F] transition-colors rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8F135]"
+                        aria-label={
+                          showCurrentPassword
+                            ? "Hide current password"
+                            : "Show current password"
+                        }
+                        tabIndex={-1}
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="w-5 h-5" aria-hidden />
+                        ) : (
+                          <Eye className="w-5 h-5" aria-hidden />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                       New Password
                     </label>
                     <input
-                      type="password"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password"
+                      autoComplete="new-password"
                       className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                     />
                   </div>
@@ -161,12 +270,48 @@ export default function SettingsPage() {
                       Confirm Password
                     </label>
                     <input
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm new password"
+                      autoComplete="new-password"
                       className="w-full px-4 py-3 bg-[#F5F0E8] border border-transparent rounded-xl font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                     />
                   </div>
                 </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={passwordLoading}
+                        className="px-6 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-sm text-[#0F0F0F] hover:scale-[1.02] transition-transform disabled:opacity-50"
+                      >
+                        {passwordLoading ? "Updatingâ€¦" : "Update password"}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="font-body text-sm text-[#6B6560] leading-relaxed">
+                      You signed in with Google. Manage your password in your
+                      Google account. To sign in with email and password as well,
+                      you can set a password via a reset link sent to{" "}
+                      <span className="text-[#0F0F0F] font-medium">
+                        {accountEmail || "your email"}
+                      </span>
+                      .
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleSendPasswordResetEmail}
+                      disabled={resetEmailLoading || !accountEmail}
+                      className="px-5 py-2.5 border border-[#E8E2D9] rounded-full font-display font-semibold text-sm text-[#0F0F0F] hover:border-[#0F0F0F] transition-colors disabled:opacity-50"
+                    >
+                      {resetEmailLoading
+                        ? "Sendingâ€¦"
+                        : "Send password setup email"}
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

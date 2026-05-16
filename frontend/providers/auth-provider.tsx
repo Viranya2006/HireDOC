@@ -10,13 +10,16 @@ import {
 } from "react";
 import {
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
   GoogleAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
+  updatePassword,
   type User,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
@@ -49,6 +52,7 @@ interface AuthContextValue {
   ) => Promise<void>;
   resendVerification: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -250,6 +254,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [configured],
   );
 
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      if (!configured) {
+        throw new Error(
+          "Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* to .env.local",
+        );
+      }
+      const auth = getFirebaseAuth();
+      if (!auth) throw new Error("Firebase not initialized");
+
+      const user = auth.currentUser;
+      if (!user?.email) {
+        throw new Error("You must be signed in to change your password.");
+      }
+
+      const hasPasswordProvider = user.providerData.some(
+        (p) => p.providerId === "password",
+      );
+      if (!hasPasswordProvider) {
+        throw new Error(
+          "Your account uses Google sign-in. Manage your password through Google, or use “Send reset email” to add a password.",
+        );
+      }
+
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword,
+      );
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+    },
+    [configured],
+  );
+
   const signOut = useCallback(async () => {
     clearToken();
     clearSessionCookie();
@@ -270,6 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         resendVerification,
         sendPasswordReset,
+        changePassword,
         signOut,
       }}
     >
@@ -286,6 +325,24 @@ export function useAuth() {
 
 export function getAuthErrorMessage(err: unknown): string {
   if (err instanceof ApiError) return err.message;
+  if (err instanceof FirebaseError) {
+    switch (err.code) {
+      case "auth/wrong-password":
+        return "Current password is incorrect";
+      case "auth/invalid-credential":
+        return "Current password is incorrect";
+      case "auth/weak-password":
+        return "Password should be at least 6 characters";
+      case "auth/requires-recent-login":
+        return "For security, sign out and sign in again, then try changing your password.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Wait a few minutes and try again.";
+      case "auth/user-mismatch":
+        return "Session expired. Sign out and sign in again.";
+      default:
+        break;
+    }
+  }
   if (err instanceof Error) {
     if (
       err.message.includes("auth/configuration-not-found") ||
