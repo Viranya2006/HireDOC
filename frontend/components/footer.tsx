@@ -12,7 +12,7 @@ export function Footer() {
           <div className="flex items-center gap-2">
             <Logo size="xs" />
             <span className="font-display font-bold text-[#F5F0E8] text-base">HireDoc AI</span>
-            <span className="font-body text-sm text-[rgba(245,240,232,0.5)] ml-2">© 2025</span>
+            <span className="font-body text-sm text-[rgba(245,240,232,0.5)] ml-2">© 2026 </span>
           </div>
 
           {/* Center */}
