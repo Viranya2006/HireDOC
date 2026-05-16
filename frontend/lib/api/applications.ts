@@ -1,53 +1,69 @@
 import type { Candidate, SubmitApplicationInput } from "@/lib/types/application";
-import { MOCK_CANDIDATES } from "@/lib/mocks/candidates";
-import { delay } from "./delay";
+import { apiFetch } from "./client";
+import {
+  mapApplicationDetailToCandidate,
+  mapApplicationListItemToCandidate,
+  type BackendApplicationDetail,
+  type BackendApplicationListItem,
+} from "./mappers";
 
-let candidatesStore: Candidate[] = [...MOCK_CANDIDATES];
-
-export async function getCandidatesForJob(jobId: string): Promise<Candidate[]> {
-  await delay();
-  return candidatesStore
-    .filter((c) => c.jobId === jobId)
-    .sort((a, b) => b.score - a.score);
+interface ApplicationsListResponse {
+  applications: BackendApplicationListItem[];
 }
 
-export async function getCandidateById(id: string): Promise<Candidate | null> {
-  await delay(150);
-  return candidatesStore.find((c) => c.id === id) ?? null;
+interface ApplicationDetailResponse {
+  application: BackendApplicationDetail;
+}
+
+interface SubmitApplicationResponse {
+  message: string;
+  application_id: string;
+}
+
+export async function getCandidatesForJob(
+  jobId: string,
+): Promise<Candidate[]> {
+  const { applications } = await apiFetch<ApplicationsListResponse>(
+    `/api/applications/job/${jobId}`,
+    { auth: true },
+  );
+  return applications.map((a) =>
+    mapApplicationListItemToCandidate(a, jobId),
+  );
+}
+
+export async function getCandidateById(
+  id: string,
+  jobId: string,
+): Promise<Candidate | null> {
+  try {
+    const { application } = await apiFetch<ApplicationDetailResponse>(
+      `/api/applications/job/${jobId}/${id}`,
+      { auth: true },
+    );
+    return mapApplicationDetailToCandidate(application, jobId);
+  } catch {
+    return null;
+  }
+}
+
+export interface SubmitApplicationOptions extends SubmitApplicationInput {
+  slug: string;
+  resume: File;
+  answerMap: Record<string, string>;
 }
 
 export async function submitApplication(
-  input: SubmitApplicationInput
-): Promise<Candidate> {
-  await delay(500);
-  const initials = input.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  input: SubmitApplicationOptions,
+): Promise<void> {
+  const formData = new FormData();
+  formData.append("candidate_name", input.name);
+  formData.append("candidate_email", input.email);
+  formData.append("cv", input.resume);
+  formData.append("answers", JSON.stringify(input.answerMap));
 
-  const candidate: Candidate = {
-    id: `c-${Date.now()}`,
-    jobId: input.jobId,
-    name: input.name,
-    email: input.email,
-    initials,
-    role: "Applicant",
-    score: 72 + Math.floor(Math.random() * 20),
-    skills: [],
-    status: "New",
-    appliedAgo: "just now",
-    matchingSkills: ["React", "TypeScript"],
-    gaps: ["AWS"],
-    redFlags: [],
-    summary: "Application submitted. MiniMax evaluation pending (mock).",
-    questions: input.answers,
-    phone: input.phone,
-    portfolio: input.portfolio,
-    linkedin: input.linkedin,
-  };
-
-  candidatesStore = [candidate, ...candidatesStore];
-  return candidate;
+  await apiFetch<SubmitApplicationResponse>(
+    `/api/applications/apply/${encodeURIComponent(input.slug)}`,
+    { method: "POST", formData },
+  );
 }

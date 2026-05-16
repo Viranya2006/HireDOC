@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getCandidateById } from "@/lib/api/applications";
@@ -10,18 +10,36 @@ import { ScoreRing } from "@/components/score-ring";
 import { SkillChip } from "@/components/skill-chip";
 import { ROUTES } from "@/lib/constants/routes";
 
-export default function CandidateDetailPage() {
+function CandidateDetailContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id as string;
+  const jobId = searchParams.get("jobId") || "";
+
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getCandidateById(id).then((data) => {
+    if (!jobId) {
+      setLoading(false);
+      return;
+    }
+    getCandidateById(id, jobId).then((data) => {
       setCandidate(data);
       setLoading(false);
     });
-  }, [id]);
+  }, [id, jobId]);
+
+  if (!jobId) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="font-display font-bold text-xl">Missing job context</h1>
+        <Link href={ROUTES.dashboard} className="text-[#0057FF] mt-4 inline-block">
+          Back to dashboard
+        </Link>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -43,84 +61,89 @@ export default function CandidateDetailPage() {
   }
 
   return (
-    <>
-      <header className="h-[72px] bg-white border-b border-[#E8E2D9] px-4 md:px-8 flex items-center gap-4 sticky top-0 z-10">
-        <Link
-          href={ROUTES.dashboardForJob(candidate.jobId)}
-          className="p-2 hover:bg-[#F5F0E8] rounded-lg"
-        >
-          ←
-        </Link>
-        <div>
-          <h1 className="font-display font-extrabold text-xl">{candidate.name}</h1>
-          <p className="font-body text-sm text-[#6B6560]">{candidate.role}</p>
-        </div>
-      </header>
+    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+      <Link
+        href={ROUTES.dashboardForJob(candidate.jobId)}
+        className="font-body text-sm text-[#0057FF] hover:underline mb-6 inline-block"
+      >
+        ← Back to dashboard
+      </Link>
 
-      <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border p-6 flex flex-wrap items-center gap-6"
-        >
-          <ScoreRing score={candidate.score} size={80} />
-          <div>
-            <p className="font-body text-[#6B6560] text-sm">Fit Score</p>
-            <p className="font-data font-bold text-2xl">
-              {candidate.score}/100
-            </p>
-            <p className="font-body text-sm text-[#6B6560] mt-1">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl border border-[#E8E2D9] p-8"
+      >
+        <motion.div className="flex flex-wrap items-start gap-6 mb-8">
+          <ScoreRing score={candidate.score} size={120} />
+          <div className="flex-1 min-w-[200px]">
+            <h1 className="font-display font-extrabold text-2xl text-[#0F0F0F]">
+              {candidate.name}
+            </h1>
+            <p className="font-body text-[#6B6560] mt-1">{candidate.email}</p>
+            <p className="font-body text-sm text-[#6B6560] mt-2">
               Applied {candidate.appliedAgo}
             </p>
           </div>
         </motion.div>
 
-        <div className="bg-white rounded-2xl border p-6 space-y-4">
-          <h2 className="font-display font-bold">AI Hiring Brief</h2>
-          <p className="font-body text-[#6B6560] italic">
-            &ldquo;{candidate.summary}&rdquo;
-          </p>
-          <div>
-            <p className="font-body text-xs font-semibold text-[#00C896] uppercase mb-2">
+        <p className="font-body text-[#0F0F0F] leading-relaxed mb-8">
+          {candidate.summary}
+        </p>
+
+        {candidate.matchingSkills.length > 0 && (
+          <div className="mb-6">
+            <h2 className="font-display font-bold text-sm uppercase text-[#6B6560] mb-3">
               Matching skills
-            </p>
+            </h2>
             <div className="flex flex-wrap gap-2">
-              {candidate.matchingSkills.map((s) => (
-                <SkillChip key={s} label={s} variant="mint" />
+              {candidate.matchingSkills.map((skill) => (
+                <SkillChip key={skill} label={skill} variant="mint" />
               ))}
             </div>
           </div>
-          {candidate.gaps.length > 0 && (
-            <div>
-              <p className="font-body text-xs font-semibold text-[#FF4D2E] uppercase mb-2">
-                Gaps
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {candidate.gaps.map((g) => (
-                  <SkillChip key={g} label={g} variant="coral" />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        )}
 
-        {candidate.answers && candidate.answers.length > 0 && (
-          <div className="bg-white rounded-2xl border p-6 space-y-4">
-            <h2 className="font-display font-bold">Screening answers</h2>
-            {candidate.answers.map((item, i) => (
-              <div key={i} className="border-b border-[#E8E2D9] pb-4 last:border-0">
-                <p className="font-display font-semibold text-sm mb-1">
-                  {item.question}
-                </p>
-                <p className="font-body text-sm text-[#6B6560]">{item.answer}</p>
-                <p className="font-mono text-xs text-[#00C896] mt-1">
-                  Score: {item.score}/100
-                </p>
-              </div>
-            ))}
+        {candidate.gaps.length > 0 && (
+          <div className="mb-6">
+            <h2 className="font-display font-bold text-sm uppercase text-[#6B6560] mb-3">
+              Gaps
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {candidate.gaps.map((skill) => (
+                <SkillChip key={skill} label={skill} variant="coral" />
+              ))}
+            </div>
           </div>
         )}
-      </div>
-    </>
+
+        {candidate.redFlags.length > 0 && (
+          <motion.div className="mb-6">
+            <h2 className="font-display font-bold text-sm uppercase text-[#FF4D2E] mb-3">
+              Red flags
+            </h2>
+            <ul className="list-disc list-inside font-body text-sm text-[#6B6560] space-y-1">
+              {candidate.redFlags.map((flag) => (
+                <li key={flag}>{flag}</li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+export default function CandidateDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <p className="font-body text-[#6B6560]">Loading…</p>
+        </div>
+      }
+    >
+      <CandidateDetailContent />
+    </Suspense>
   );
 }

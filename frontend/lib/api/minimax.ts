@@ -1,5 +1,9 @@
 import type { JobRequirements } from "@/lib/types/job";
-import { delay } from "./delay";
+import { apiFetch } from "./client";
+import {
+  mapAIRequirementsToFrontend,
+  type BackendAIRequirements,
+} from "./mappers";
 
 export interface JDAnalysisResult {
   overallScore: number;
@@ -14,61 +18,62 @@ export interface JDAnalysisResult {
   suggestions: string[];
 }
 
-export async function analyzeJD(description: string): Promise<JDAnalysisResult> {
-  await delay(800);
-  void description;
+interface AnalyzeResponse {
+  analysis: BackendAIRequirements;
+}
+
+function buildMetrics(requirements: JobRequirements): JDAnalysisResult["metrics"] {
+  const skillCount = requirements.requiredSkills.length;
+  const score = Math.min(95, 70 + skillCount * 3);
+  return [
+    {
+      label: "Role Clarity",
+      score,
+      color: "#00C896",
+      insight: "Requirements extracted from your job description",
+    },
+    {
+      label: "Screening Coverage",
+      score: Math.min(
+        95,
+        60 + requirements.screeningQuestions.length * 8,
+      ),
+      color: "#0057FF",
+      insight: `${requirements.screeningQuestions.length} screening questions generated`,
+    },
+    {
+      label: "Experience Fit",
+      score: 88,
+      color: "#C8F135",
+      insight: requirements.experienceLevel || "Experience level identified",
+    },
+  ];
+}
+
+export async function analyzeJD(jobId: string): Promise<JDAnalysisResult> {
+  const { analysis } = await apiFetch<AnalyzeResponse>(
+    `/api/ai/analyze-jd/${jobId}`,
+    { method: "POST", auth: true },
+  );
+
+  const requirements = mapAIRequirementsToFrontend(analysis);
+  const overallScore = Math.min(
+    98,
+    75 +
+      requirements.requiredSkills.length * 2 +
+      requirements.screeningQuestions.length * 3,
+  );
 
   return {
-    overallScore: 92,
-    requirements: {
-      requiredSkills: ["React", "TypeScript", "Node.js", "GraphQL", "AWS"],
-      niceToHaveSkills: ["Python", "Docker", "CI/CD"],
-      responsibilities: [
-        "Build and maintain frontend features",
-        "Collaborate with design and backend teams",
-        "Write tests and review code",
-      ],
-      experienceLevel: "Senior (5+ years)",
-      mustHaveCriteria: [
-        "Production React experience",
-        "TypeScript proficiency",
-        "Remote collaboration skills",
-      ],
-      screeningQuestions: [
-        "Walk me through your most complex React project.",
-        "How do you handle performance optimization in large apps?",
-        "Describe your TypeScript experience in production.",
-        "Are you available for full-time remote work?",
-      ],
-    },
-    metrics: [
-      {
-        label: "Role Clarity",
-        score: 95,
-        color: "#00C896",
-        insight: "Clear responsibilities and expectations defined",
-      },
-      {
-        label: "Candidate Pool",
-        score: 88,
-        color: "#0057FF",
-        insight: "Estimated 2,400+ qualified candidates available",
-      },
-      {
-        label: "Market Fit",
-        score: 91,
-        color: "#C8F135",
-        insight: "Competitive salary range for this role",
-      },
-    ],
-    strengths: [
-      "Well-defined technical requirements",
-      "Competitive compensation package",
-      "Clear growth opportunities mentioned",
-    ],
+    overallScore,
+    requirements,
+    metrics: buildMetrics(requirements),
+    strengths: requirements.mustHaveCriteria.length
+      ? requirements.mustHaveCriteria
+      : ["Well-defined technical requirements"],
     suggestions: [
-      "Add remote work policy details",
-      "Include team size and structure",
+      "Review screening questions before publishing",
+      "Confirm experience level matches your hiring bar",
     ],
   };
 }

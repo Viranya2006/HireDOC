@@ -31,10 +31,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, signOut } = useAuth();
+  const { recruiter, signOut } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
 
-  const jobId = searchParams.get("jobId") || "job-1";
+  const jobId = searchParams.get("jobId") || jobs[0]?.id || "";
   const selectedJob = jobs.find((j) => j.id === jobId) ?? jobs[0];
 
   useEffect(() => {
@@ -57,15 +57,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     onNavigate?.();
   };
 
-  const handleSignOut = async () => {
-    document.cookie = "hiredoc_session=; path=/; max-age=0";
-    await signOut();
+  const handleSignOut = () => {
+    signOut();
     router.push(ROUTES.home);
     onNavigate?.();
   };
 
   const displayName =
-    user?.displayName || user?.email?.split("@")[0] || "Recruiter";
+    recruiter?.organization_name ||
+    recruiter?.email?.split("@")[0] ||
+    "Recruiter";
   const initials = displayName
     .split(" ")
     .map((n) => n[0])

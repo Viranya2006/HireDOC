@@ -7,6 +7,7 @@ import { ScoreRing } from "@/components/score-ring";
 import { ROUTES } from "@/lib/constants/routes";
 
 interface CandidateTableProps {
+  jobId: string;
   candidates: Candidate[];
   selectedCandidate: Candidate | null;
   onSelectCandidate: (candidate: Candidate) => void;
@@ -29,6 +30,7 @@ function StatusBadge({ status }: { status: Candidate["status"] }) {
 }
 
 export function CandidateTable({
+  jobId,
   candidates,
   selectedCandidate,
   onSelectCandidate,
@@ -128,7 +130,7 @@ export function CandidateTable({
 
               <div>
                 <Link
-                  href={ROUTES.candidate(candidate.id)}
+                  href={ROUTES.candidate(jobId, candidate.id)}
                   onClick={(e) => e.stopPropagation()}
                   className="px-3 py-1.5 border border-[rgba(15,15,15,0.15)] rounded-lg font-body text-xs font-medium hover:bg-[#C8F135] hover:border-[#C8F135] inline-block"
                 >

@@ -6,6 +6,7 @@ export const ROUTES = {
   jobsNew: "/jobs/new",
   settings: "/dashboard/settings",
   apply: (slug: string) => `/apply/${slug}`,
-  candidate: (id: string) => `/dashboard/candidates/${id}`,
+  candidate: (jobId: string, id: string) =>
+    `/dashboard/candidates/${id}?jobId=${jobId}`,
   dashboardForJob: (jobId: string) => `/dashboard?jobId=${jobId}`,
 } as const;

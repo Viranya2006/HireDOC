@@ -6,7 +6,9 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getJobBySlug } from "@/lib/api/jobs";
 import { submitApplication } from "@/lib/api/applications";
+import { ApiError } from "@/lib/api/client";
 import type { Job } from "@/lib/types/job";
+import { toast } from "sonner";
 
 export default function ApplyPage() {
   const params = useParams();
@@ -16,6 +18,7 @@ export default function ApplyPage() {
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -48,19 +51,47 @@ export default function ApplyPage() {
 
   const handleSubmit = async () => {
     if (!job || !formData.name || !formData.email) return;
+    if (!formData.resume) {
+      setError("Please upload your resume (PDF).");
+      return;
+    }
+    if (formData.resume.type !== "application/pdf") {
+      setError("Resume must be a PDF file.");
+      return;
+    }
+    if (formData.resume.size > 5 * 1024 * 1024) {
+      setError("Resume must be 5MB or smaller.");
+      return;
+    }
+
+    const answerMap: Record<string, string> = {};
+    job.questions.forEach((q, i) => {
+      if (formData.answers[i]?.trim()) {
+        answerMap[q.id] = formData.answers[i];
+      }
+    });
+
+    setError("");
     setSubmitting(true);
     try {
       await submitApplication({
         jobId: job.id,
+        slug: job.slug,
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         linkedin: formData.linkedin,
         portfolio: formData.portfolio,
         answers: formData.answers,
-        resumeFileName: formData.resume?.name,
+        resume: formData.resume,
+        answerMap,
       });
       setSubmitted(true);
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Failed to submit application";
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -305,7 +336,7 @@ export default function ApplyPage() {
                     <div className="relative">
                       <input
                         type="file"
-                        accept=".pdf,.doc,.docx"
+                        accept=".pdf,application/pdf"
                         onChange={(e) =>
                           setFormData({
                             ...formData,
@@ -334,7 +365,7 @@ export default function ApplyPage() {
                             : "Drop your resume here or click to upload"}
                         </p>
                         <p className="font-mono text-xs text-[#6B6560]/60 mt-1">
-                          PDF, DOC, DOCX up to 10MB
+                          PDF only, up to 5MB
                         </p>
                       </div>
                     </div>
@@ -390,6 +421,9 @@ export default function ApplyPage() {
                     </div>
                   ))}
                 </div>
+                {error && (
+                  <p className="font-body text-sm text-[#FF4D2E] mt-4">{error}</p>
+                )}
                 <div className="flex justify-between mt-8">
                   <button
                     onClick={() => setStep(1)}
