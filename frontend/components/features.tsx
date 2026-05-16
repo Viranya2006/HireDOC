@@ -2,11 +2,13 @@
 
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
+import { staggerContainer, staggerItem } from '@/components/motion/landing-motion'
 
 const features = [
   {
     title: 'JD Understanding',
-    description: 'AI extracts must-haves, nice-to-haves, and role expectations from any job description.',
+    description:
+      'AI extracts must-haves, nice-to-haves, and role expectations from any job description.',
     borderColor: '#C8F135',
     iconBg: 'rgba(200, 241, 53, 0.1)',
     iconColor: '#9AC020',
@@ -18,7 +20,8 @@ const features = [
   },
   {
     title: 'Question Generator',
-    description: 'Smart screening questions crafted from your JD — technical, behavioral, and situational.',
+    description:
+      'Smart screening questions crafted from your JD — technical, behavioral, and situational.',
     borderColor: '#0057FF',
     iconBg: 'rgba(0, 87, 255, 0.1)',
     iconColor: '#0057FF',
@@ -30,7 +33,8 @@ const features = [
   },
   {
     title: 'CV + Answer Analysis',
-    description: 'Every CV and response parsed, compared to requirements, and scored for relevance.',
+    description:
+      'Every CV and response parsed, compared to requirements, and scored for relevance.',
     borderColor: '#FF4D2E',
     iconBg: 'rgba(255, 77, 46, 0.1)',
     iconColor: '#FF4D2E',
@@ -42,7 +46,8 @@ const features = [
   },
   {
     title: 'Fit Score Ranking',
-    description: 'Candidates ranked by fit. See who matches best at a glance — no more guessing.',
+    description:
+      'Candidates ranked by fit. See who matches best at a glance — no more guessing.',
     borderColor: '#00C896',
     iconBg: 'rgba(0, 200, 150, 0.1)',
     iconColor: '#00C896',
@@ -54,7 +59,8 @@ const features = [
   },
   {
     title: 'Recruiter Hiring Brief',
-    description: 'A one-page AI summary per candidate: strengths, gaps, red flags, and hiring recommendation.',
+    description:
+      'A one-page AI summary per candidate: strengths, gaps, red flags, and hiring recommendation.',
     borderColor: '#C8F135',
     iconBg: 'rgba(200, 241, 53, 0.1)',
     iconColor: '#9AC020',
@@ -66,7 +72,8 @@ const features = [
   },
   {
     title: 'One Shareable Link',
-    description: 'Post your job, get a link. Share anywhere — social, email, job boards. Done.',
+    description:
+      'Post your job, get a link. Share anywhere — social, email, job boards. Done.',
     borderColor: '#0057FF',
     iconBg: 'rgba(0, 87, 255, 0.1)',
     iconColor: '#0057FF',
@@ -80,18 +87,24 @@ const features = [
 
 export function Features() {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, amount: 0.2 })
+  const isInView = useInView(ref, { once: true, amount: 0.12 })
 
   return (
-    <section id="features" ref={ref} className="py-20 lg:py-28 bg-[#EDE8DC]">
-      <div className="max-w-[1200px] mx-auto px-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-16"
-        >
+    <section id="features" ref={ref} className="relative py-20 lg:py-28 bg-[#EDE8DC] overflow-hidden">
+      <motion.div
+        className="pointer-events-none absolute -right-32 top-20 h-64 w-64 rounded-full bg-[#C8F135]/15 blur-3xl"
+        animate={isInView ? { y: [0, 24, 0], opacity: [0.3, 0.5, 0.3] } : {}}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+        aria-hidden
+      />
+
+      <motion.div
+        className="max-w-[1200px] mx-auto px-6 relative z-10"
+        initial="hidden"
+        animate={isInView ? 'visible' : 'hidden'}
+        variants={staggerContainer}
+      >
+        <motion.div variants={staggerItem} className="text-center mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-[#0F0F0F] rounded-full mb-6">
             <span className="font-body font-semibold text-[11px] uppercase tracking-wide text-[#F5F0E8]">
               Features
@@ -102,23 +115,27 @@ export function Features() {
           </h2>
         </motion.div>
 
-        {/* Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div
+          variants={staggerContainer}
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           {features.map((feature, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 32 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.55, delay: 0.1 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-2xl p-6 border border-[rgba(15,15,15,0.06)] shadow-[0_2px_12px_rgba(15,15,15,0.06)] transition-all duration-250 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(15,15,15,0.12)]"
+              variants={staggerItem}
+              whileHover={{ y: -6, scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="bg-white rounded-2xl p-6 border border-[rgba(15,15,15,0.06)] shadow-[0_2px_12px_rgba(15,15,15,0.06)] hover:shadow-[0_16px_48px_rgba(15,15,15,0.12)]"
               style={{ borderTopWidth: '3px', borderTopColor: feature.borderColor }}
             >
-              <div 
+              <motion.div
                 className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
                 style={{ backgroundColor: feature.iconBg, color: feature.iconColor }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.2 }}
               >
                 {feature.icon}
-              </div>
+              </motion.div>
               <h3 className="font-display font-bold text-lg text-[#0F0F0F] mb-2">
                 {feature.title}
               </h3>
@@ -127,8 +144,8 @@ export function Features() {
               </p>
             </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </section>
   )
 }
