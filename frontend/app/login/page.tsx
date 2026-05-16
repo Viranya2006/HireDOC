@@ -11,7 +11,7 @@ import { ROUTES } from "@/lib/constants/routes";
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || ROUTES.jobsNew;
+  const redirect = searchParams.get("redirect") || ROUTES.jobs;
   const { signIn, signInWithGoogle, signUp, sendPasswordReset, isConfigured } =
     useAuth();
 

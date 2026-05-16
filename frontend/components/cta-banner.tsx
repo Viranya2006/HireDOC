@@ -42,7 +42,7 @@ export function CTABanner() {
             className="inline-block"
           >
             <Link
-              href={ROUTES.jobsNew}
+              href={ROUTES.jobs}
               className="inline-flex items-center justify-center px-8 py-4 bg-[#0F0F0F] text-[#C8F135] font-display font-semibold text-lg rounded-full transition-all hover:bg-[#1a1a1a]"
             >
               Start Hiring Free →
