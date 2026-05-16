@@ -4,7 +4,11 @@ import { Question } from "../models/Question";
 import { Application } from "../models/Application";
 import { extractTextFromPDF } from "../services/cvParserService";
 import { evaluateCandidate } from "../services/minimaxService";
-import { saveCv } from "../services/cvStorageService";
+import {
+  getGridFsCvJobId,
+  openCvReadStream,
+  saveCv,
+} from "../services/cvStorageService";
 import { sendDecisionEmail } from "../services/emailService";
 import type { RecruiterStatus } from "../models/Application";
 
@@ -93,6 +97,35 @@ export const submitApplication = async (req: Request, res: Response) => {
     message: "Application submitted successfully",
     application_id: application._id,
   });
+};
+
+export const downloadCv = async (req: Request, res: Response) => {
+  const { file_id } = req.params;
+
+  const jobId = await getGridFsCvJobId(file_id);
+  if (!jobId) {
+    return res.status(404).json({ error: "CV not found" });
+  }
+
+  const job = await Job.findOne({
+    _id: jobId,
+    recruiter_id: req.recruiter!._id,
+  });
+  if (!job) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const opened = await openCvReadStream(file_id);
+  if (!opened) {
+    return res.status(404).json({ error: "CV not found" });
+  }
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `inline; filename="${opened.filename.replace(/"/g, "")}"`,
+  );
+  opened.stream.pipe(res);
 };
 
 export const getApplicationsForJob = async (req: Request, res: Response) => {

@@ -16,9 +16,17 @@ import { errorHandler } from "./middleware/errorHandler";
 const app = express();
 const PORT = env.port;
 
+const corsOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+if (env.frontendUrl) {
+  corsOrigins.push(env.frontendUrl);
+}
+
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    origin: corsOrigins,
     credentials: true,
   }),
 );

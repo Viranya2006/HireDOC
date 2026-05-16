@@ -29,6 +29,7 @@ export const env = {
   smtpUser: process.env.SMTP_USER?.trim() ?? "",
   smtpPass: process.env.SMTP_PASS?.trim() ?? "",
   emailFrom: process.env.EMAIL_FROM?.trim() ?? "",
+  frontendUrl: process.env.FRONTEND_URL?.replace(/\/$/, "") ?? "",
 } as const;
 
 export function isSmtpConfigured(): boolean {
