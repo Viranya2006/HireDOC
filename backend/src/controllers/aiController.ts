@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import { Job } from "../models/Job";
-import { analyzeJobDescription } from "../services/minimaxService";
+import {
+  analyzeJobDescription,
+  MiniMaxError,
+} from "../services/minimaxService";
 
 export const analyzeJD = async (req: Request, res: Response) => {
   const job = await Job.findOne({
@@ -15,6 +18,12 @@ export const analyzeJD = async (req: Request, res: Response) => {
     await job.save();
     res.json({ analysis: result });
   } catch (err: unknown) {
+    if (err instanceof MiniMaxError) {
+      return res.status(err.httpStatus).json({
+        error: err.message,
+        minimax_code: err.minimaxCode,
+      });
+    }
     const message = err instanceof Error ? err.message : "AI analysis failed";
     res.status(500).json({ error: message });
   }
