@@ -92,8 +92,12 @@ async function submitApplicationHandler(req: Request, res: Response) {
           _id: q._id.toString(),
           question_text: q.question_text,
         })),
+        job.ai_requirements,
       );
-      const fitScore = calculateFitScore(aiResult.model_evidence);
+      const fitScore = calculateFitScore(
+        aiResult.model_evidence,
+        job.ai_requirements ?? undefined,
+      );
       const aiSummary = {
         ...aiResult,
         overall_score: fitScore.overall_score,

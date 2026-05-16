@@ -9,6 +9,7 @@ import type {
 const MINIMAX_BASE_URL =
   process.env.MINIMAX_API_BASE_URL?.trim() || "https://api.minimax.io/v1";
 const MINIMAX_MODEL = process.env.MINIMAX_MODEL?.trim() || "MiniMax-M2.7";
+const MINIMAX_MAX_ATTEMPTS = 3;
 
 type MiniMaxNativeResponse = {
   base_resp?: { status_code?: number; status_msg?: string };
@@ -79,6 +80,17 @@ export class MiniMaxError extends Error {
     super(message);
     this.name = "MiniMaxError";
   }
+}
+
+function isEmptyContentError(err: unknown): boolean {
+  return (
+    err instanceof MiniMaxError &&
+    err.message.includes("no message content")
+  );
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function assertMiniMaxConfigured() {
@@ -180,7 +192,7 @@ async function callMiniMaxNative(
       model: MINIMAX_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
-      max_tokens: 2000,
+      max_tokens: 4000,
     },
     {
       headers: {
@@ -203,8 +215,8 @@ async function callMiniMaxOpenAI(
     {
       model: MINIMAX_MODEL,
       messages: [{ role: "user", content: prompt }],
-      temperature: 1,
-      max_tokens: 2000,
+      temperature: 0,
+      max_tokens: 4000,
     },
     {
       headers: {
@@ -217,7 +229,7 @@ async function callMiniMaxOpenAI(
   return extractOpenAIContent(response.data);
 }
 
-async function callMiniMax(prompt: string): Promise<string> {
+async function callMiniMaxOnce(prompt: string): Promise<string> {
   assertMiniMaxConfigured();
   const { apiKey, groupId, isTokenPlan } = getMinimaxConfig();
 
@@ -261,6 +273,28 @@ async function callMiniMax(prompt: string): Promise<string> {
         : 502,
     );
   }
+}
+
+async function callMiniMax(prompt: string): Promise<string> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= MINIMAX_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await callMiniMaxOnce(prompt);
+    } catch (err) {
+      lastError = err;
+      if (!isEmptyContentError(err) || attempt === MINIMAX_MAX_ATTEMPTS) {
+        throw err;
+      }
+
+      console.warn(
+        `MiniMax returned empty content, retrying candidate request (${attempt}/${MINIMAX_MAX_ATTEMPTS})`,
+      );
+      await sleep(500 * attempt);
+    }
+  }
+
+  throw lastError;
 }
 
 export async function analyzeJobDescription(
@@ -346,10 +380,21 @@ export async function evaluateCandidate(
   cvText: string,
   answers: Record<string, string>,
   questions: { _id: string; question_text: string }[],
+  aiRequirements?: AIRequirements | null,
 ): Promise<CandidateEvaluation> {
   const formattedAnswers = questions
     .map((q) => `Q: ${q.question_text}\nA: ${answers[q._id] || "(no answer)"}`)
     .join("\n\n");
+  const requiredSkills = aiRequirements?.required_skills ?? [];
+  const niceToHaveSkills = aiRequirements?.nice_to_have_skills ?? [];
+  const canonicalSkillsText =
+    requiredSkills.length > 0 || niceToHaveSkills.length > 0
+      ? `Canonical JD skills to evaluate exactly:
+Required skills (${requiredSkills.length}): ${JSON.stringify(requiredSkills)}
+Nice-to-have skills (${niceToHaveSkills.length}): ${JSON.stringify(niceToHaveSkills)}
+
+Use these canonical lists for skills matching. Do not add extra skill requirements, rename requirements, or change total_count.`
+      : "No canonical JD skills were pre-extracted. Infer skills from the job description once and keep totals conservative.";
 
   const prompt = `Compare this candidate's CV and screening answers against the job description.
 Return ONLY a valid JSON object with no extra text or markdown.
@@ -414,11 +459,14 @@ Return this exact structure:
 }
 
 Rules:
-- For skills, extract required and nice-to-have skills from the job description, then compare them against the CV. required.total_count + nice_to_have.total_count should equal the JD skills you evaluated.
+- For skills, use the Canonical JD skills section below when it is present. required.total_count must equal the canonical required skill count, and nice_to_have.total_count must equal the canonical nice-to-have skill count.
+- If a canonical skill is only weakly implied in the CV, do not count it as matched. Put it in missing and explain uncertainty in recruiter_summary if important.
 - matched_count must never be greater than total_count.
 - For non-skill sections, set active=false when the job description does not ask for that section. Example: education.active=false if no education requirement is stated.
 - For non-skill active sections, score is the section match only, not a weighted final score.
 - Use screening answers only as supporting evidence for experience, project, and skill claims. Do not count unsupported claims as strongly as CV evidence.
+
+${canonicalSkillsText}
 
 Job Description:
 ${jobDescription}

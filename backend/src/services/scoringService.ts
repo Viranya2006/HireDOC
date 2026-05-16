@@ -29,6 +29,11 @@ export type CandidateModelEvidence = {
   certifications?: CountMatchEvidence;
 };
 
+export type SkillRequirements = {
+  required_skills?: unknown;
+  nice_to_have_skills?: unknown;
+};
+
 type SectionKey =
   | "skills"
   | "experience"
@@ -132,6 +137,19 @@ function sanitizeCountEvidence(
   };
 }
 
+function withCanonicalSkillTotal(
+  evidence: SanitizedCountEvidence,
+  canonicalSkills: string[],
+): SanitizedCountEvidence {
+  if (canonicalSkills.length === 0) return evidence;
+
+  return {
+    ...evidence,
+    matched_count: clamp(evidence.matched_count, 0, canonicalSkills.length),
+    total_count: canonicalSkills.length,
+  };
+}
+
 function isSectionActive(section: ScoredSectionEvidence | undefined): boolean {
   if (!section) return false;
   if (typeof section.active === "boolean") return section.active;
@@ -168,9 +186,22 @@ function buildInactiveSection(baseWeight: number): SectionBreakdown {
 
 function getRawSectionScores(
   evidence: CandidateModelEvidence,
+  skillRequirements?: SkillRequirements,
 ): Record<SectionKey, RawSectionScore> {
-  const required = sanitizeCountEvidence(evidence.skills?.required);
-  const niceToHave = sanitizeCountEvidence(evidence.skills?.nice_to_have);
+  const canonicalRequiredSkills = stringList(
+    skillRequirements?.required_skills,
+  );
+  const canonicalNiceToHaveSkills = stringList(
+    skillRequirements?.nice_to_have_skills,
+  );
+  const required = withCanonicalSkillTotal(
+    sanitizeCountEvidence(evidence.skills?.required),
+    canonicalRequiredSkills,
+  );
+  const niceToHave = withCanonicalSkillTotal(
+    sanitizeCountEvidence(evidence.skills?.nice_to_have),
+    canonicalNiceToHaveSkills,
+  );
   const requiredMatchedValue = required.matched_count * REQUIRED_SKILL_VALUE;
   const niceMatchedValue =
     niceToHave.matched_count * NICE_TO_HAVE_SKILL_VALUE;
@@ -224,9 +255,10 @@ function getRawSectionScores(
 
 export function calculateFitScore(
   evidence: CandidateModelEvidence | undefined,
+  skillRequirements?: SkillRequirements,
 ): FitScoreResult {
   const safeEvidence = evidence ?? {};
-  const rawSections = getRawSectionScores(safeEvidence);
+  const rawSections = getRawSectionScores(safeEvidence, skillRequirements);
   const activeWeightTotal = (Object.keys(SECTION_WEIGHTS) as SectionKey[])
     .filter((key) => rawSections[key].active)
     .reduce((total, key) => total + SECTION_WEIGHTS[key], 0);
