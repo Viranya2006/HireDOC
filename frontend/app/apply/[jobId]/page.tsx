@@ -10,6 +10,7 @@ import { ApiError } from "@/lib/api/client";
 import type { Job } from "@/lib/types/job";
 import { toast } from "sonner";
 import { JobDescription } from "@/components/job-description";
+import { Logo } from "@/components/logo";
 
 export default function ApplyPage() {
   const params = useParams();
@@ -179,7 +180,7 @@ export default function ApplyPage() {
       {/* Navbar */}
       <nav className="h-16 bg-[#F6F7F9] border-b border-[#E8E2D9] px-4 md:px-8 flex items-center justify-between sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#C8F135] rounded-lg" />
+          <Logo size="md" />
           <span className="font-display font-bold text-[#0F0F0F] text-lg">
             HireDoc AI
           </span>

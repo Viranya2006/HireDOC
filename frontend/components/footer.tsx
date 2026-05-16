@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Logo } from '@/components/logo'
 
 export function Footer() {
   return (
@@ -9,9 +10,9 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Left - Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-[#C8F135] rounded-sm" />
+            <Logo size="xs" />
             <span className="font-display font-bold text-[#F5F0E8] text-base">HireDoc AI</span>
-            <span className="font-body text-sm text-[rgba(245,240,232,0.5)] ml-2">© 2025</span>
+            <span className="font-body text-sm text-[rgba(245,240,232,0.5)] ml-2">© 2026 </span>
           </div>
 
           {/* Center */}

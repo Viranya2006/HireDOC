@@ -15,6 +15,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { getJobs } from "@/lib/api/jobs";
 import type { Job } from "@/lib/types/job";
 import { ROUTES } from "@/lib/constants/routes";
+import { Logo } from "@/components/logo";
 
 const navItems = [
   { icon: Briefcase, label: "All Jobs", path: "/jobs" },
@@ -60,7 +61,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   };
 
   const displayName =
-    recruiter?.organization_name ||
+    recruiter?.full_name?.trim() ||
+    recruiter?.organization_name?.trim() ||
     recruiter?.email?.split("@")[0] ||
     "Recruiter";
   const initials = displayName
@@ -85,6 +87,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             </span>
           </div>
           <span className="font-display font-bold text-[#0F0F0F] text-base">
+          <Logo size="lg" />
+          <span className="font-display font-bold text-[#0F0F0F] text-lg">
             HireDoc AI
           </span>
         </Link>

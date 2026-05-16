@@ -8,6 +8,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Logo } from "@/components/logo";
 
 function SidebarFallback() {
   return <div className="hidden md:block w-[248px] shrink-0" />;
@@ -41,6 +42,7 @@ export function RecruiterShell({ children }: { children: React.ReactNode }) {
             </Suspense>
           </SheetContent>
         </Sheet>
+        <Logo size="sm" />
         <span className="font-display font-bold text-sm">HireDoc AI</span>
       </div>
 
