@@ -9,6 +9,7 @@ import {
   Users,
   TrendingUp,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import { ScoreRing } from "@/components/score-ring";
 import { QuestionsEditor } from "@/components/dashboard/questions-editor";
@@ -99,6 +100,35 @@ function _UnusedScoreRing({ score, size = 120 }: { score: number; size?: number 
   );
 }
 
+type AnalysisMetric = {
+  label: string;
+  score: number;
+  color: string;
+  insight: string;
+  icon: LucideIcon;
+};
+
+const METRIC_ICON_BY_LABEL: Record<string, LucideIcon> = {
+  "Role Clarity": Target,
+  "Screening Coverage": Users,
+  "Experience Fit": TrendingUp,
+  "Candidate Pool": Users,
+  "Market Fit": TrendingUp,
+};
+
+const FALLBACK_METRIC_ICONS: LucideIcon[] = [Target, Users, TrendingUp];
+
+function attachMetricIcons(
+  metrics: Omit<AnalysisMetric, "icon">[],
+): AnalysisMetric[] {
+  return metrics.map((metric, index) => ({
+    ...metric,
+    icon:
+      METRIC_ICON_BY_LABEL[metric.label] ??
+      FALLBACK_METRIC_ICONS[index % FALLBACK_METRIC_ICONS.length],
+  }));
+}
+
 function MetricBar({ score, color }: { score: number; color: string }) {
   return (
     <div className="h-2 bg-[#EDE8DC] rounded-full overflow-hidden flex-1">
@@ -127,7 +157,7 @@ export function MiniMaxAnalysis({
   const data = analysis
     ? {
         overallScore: analysis.overallScore,
-        metrics: analysis.metrics,
+        metrics: attachMetricIcons(analysis.metrics),
         strengths: analysis.strengths,
         suggestions: analysis.suggestions,
         requiredSkills: analysis.requirements.requiredSkills,
@@ -200,7 +230,9 @@ export function MiniMaxAnalysis({
               Key Metrics
             </h3>
             <div className="space-y-4">
-              {data.metrics.map((metric, index) => (
+              {data.metrics.map((metric, index) => {
+                const Icon = metric.icon;
+                return (
                 <motion.div
                   key={metric.label}
                   initial={{ x: -10, opacity: 0 }}
@@ -208,7 +240,7 @@ export function MiniMaxAnalysis({
                   transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }}
                 >
                   <div className="flex items-center gap-3 mb-1">
-                    <metric.icon
+                    <Icon
                       className="w-4 h-4"
                       style={{ color: metric.color }}
                     />
@@ -224,7 +256,8 @@ export function MiniMaxAnalysis({
                     {metric.insight}
                   </p>
                 </motion.div>
-              ))}
+              );
+              })}
             </div>
           </motion.div>
 

@@ -9,6 +9,7 @@ import { submitApplication } from "@/lib/api/applications";
 import { ApiError } from "@/lib/api/client";
 import type { Job } from "@/lib/types/job";
 import { toast } from "sonner";
+import { JobDescription } from "@/components/job-description";
 
 export default function ApplyPage() {
   const params = useParams();
@@ -491,9 +492,10 @@ export default function ApplyPage() {
               <h3 className="font-display font-bold text-[#0F0F0F] text-sm mb-4">
                 About This Role
               </h3>
-              <p className="font-body text-sm text-[#6B6560] leading-relaxed mb-6">
-                {job.description}
-              </p>
+              <JobDescription
+                description={job.description}
+                className="mb-6"
+              />
 
               <h4 className="font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-3">
                 Requirements
