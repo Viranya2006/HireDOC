@@ -16,3 +16,8 @@ dist/
 .vercel/
 .v0-trash/
 __v0_*
+backend/.env.example
+backend/.env.example
+backend/package-lock.json
+frontend/package-lock.json
+frontend/.env
