@@ -11,6 +11,9 @@ import type { Job } from "@/lib/types/job";
 import { toast } from "sonner";
 import { JobDescription } from "@/components/job-description";
 import { Logo } from "@/components/logo";
+import { EvasiveButton } from "@/components/evasive-button";
+
+type RequiredInfoField = "name" | "email" | "resume";
 
 export default function ApplyPage() {
   const params = useParams();
@@ -23,6 +26,9 @@ export default function ApplyPage() {
   const [error, setError] = useState("");
   const [loadError, setLoadError] = useState("");
   const [step, setStep] = useState(1);
+  const [highlightedFields, setHighlightedFields] = useState<
+    RequiredInfoField[]
+  >([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -66,6 +72,32 @@ export default function ApplyPage() {
     const newAnswers = [...formData.answers];
     newAnswers[index] = value;
     setFormData({ ...formData, answers: newAnswers });
+  };
+
+  const getMissingInfoFields = (): RequiredInfoField[] => {
+    const missing: RequiredInfoField[] = [];
+    if (!formData.name.trim()) missing.push("name");
+    if (!formData.email.trim()) missing.push("email");
+    if (!formData.resume) missing.push("resume");
+    return missing;
+  };
+
+  const showMissingInfoFeedback = (missing: RequiredInfoField[]) => {
+    setError("Catch the button after filling the highlighted required fields.");
+    setHighlightedFields(missing);
+    window.setTimeout(() => setHighlightedFields([]), 1200);
+  };
+
+  const handleContinueToQuestions = () => {
+    const missing = getMissingInfoFields();
+    if (missing.length === 0) {
+      setError("");
+      setHighlightedFields([]);
+      setStep(2);
+      return;
+    }
+
+    showMissingInfoFeedback(missing);
   };
 
   const handleSubmit = async () => {
@@ -349,7 +381,13 @@ export default function ApplyPage() {
                 </h2>
                 <div className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div>
+                    <div
+                      className={`rounded-xl transition-colors ${
+                        highlightedFields.includes("name")
+                          ? "bg-[#C8F135]/25 p-2 -m-2"
+                          : ""
+                      }`}
+                    >
                       <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                         Full Name *
                       </label>
@@ -360,10 +398,20 @@ export default function ApplyPage() {
                           setFormData({ ...formData, name: e.target.value })
                         }
                         placeholder="Alex Kim"
-                        className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className={`w-full px-3 py-2.5 bg-[#F6F7F9] border rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors ${
+                          highlightedFields.includes("name")
+                            ? "border-[#C8F135] ring-2 ring-[#C8F135]/50"
+                            : "border-transparent"
+                        }`}
                       />
                     </div>
-                    <div>
+                    <div
+                      className={`rounded-xl transition-colors ${
+                        highlightedFields.includes("email")
+                          ? "bg-[#C8F135]/25 p-2 -m-2"
+                          : ""
+                      }`}
+                    >
                       <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                         Email *
                       </label>
@@ -374,7 +422,11 @@ export default function ApplyPage() {
                           setFormData({ ...formData, email: e.target.value })
                         }
                         placeholder="alex@email.com"
-                        className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
+                        className={`w-full px-3 py-2.5 bg-[#F6F7F9] border rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors ${
+                          highlightedFields.includes("email")
+                            ? "border-[#C8F135] ring-2 ring-[#C8F135]/50"
+                            : "border-transparent"
+                        }`}
                       />
                     </div>
                   </div>
@@ -422,7 +474,13 @@ export default function ApplyPage() {
                       className="w-full px-3 py-2.5 bg-[#F6F7F9] border border-transparent rounded-lg font-body text-sm text-[#0F0F0F] placeholder:text-[#6B6560] focus:outline-none focus:border-[#C8F135] transition-colors"
                     />
                   </div>
-                  <div>
+                  <div
+                    className={`rounded-xl transition-colors ${
+                      highlightedFields.includes("resume")
+                        ? "bg-[#C8F135]/25 p-2 -m-2"
+                        : ""
+                    }`}
+                  >
                     <label className="block font-display font-semibold text-xs text-[#6B6560] uppercase tracking-wide mb-2">
                       Resume *
                     </label>
@@ -438,7 +496,13 @@ export default function ApplyPage() {
                         }
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       />
-                      <div className="w-full px-4 py-5 bg-[#F6F7F9] border border-dashed border-[#E8E2D9] rounded-lg text-center hover:border-[#C8F135] transition-colors">
+                      <div
+                        className={`w-full px-4 py-5 bg-[#F6F7F9] border border-dashed rounded-lg text-center hover:border-[#C8F135] transition-colors ${
+                          highlightedFields.includes("resume")
+                            ? "border-[#C8F135] ring-2 ring-[#C8F135]/50"
+                            : "border-[#E8E2D9]"
+                        }`}
+                      >
                         <svg
                           className="w-8 h-8 text-[#6B6560] mx-auto mb-2"
                           fill="none"
@@ -464,13 +528,22 @@ export default function ApplyPage() {
                     </div>
                   </div>
                 </div>
+                {error && step === 1 && (
+                  <p className="font-body text-sm text-[#FF4D2E] mt-4">
+                    {error}
+                  </p>
+                )}
                 <div className="flex justify-end mt-6">
-                  <button
-                    onClick={() => setStep(2)}
+                  <EvasiveButton
+                    shouldEvade={getMissingInfoFields().length > 0}
+                    onAllowedClick={handleContinueToQuestions}
+                    onBlockedAttempt={() =>
+                      showMissingInfoFeedback(getMissingInfoFields())
+                    }
                     className="px-5 py-2.5 bg-[#C8F135] rounded-full font-display font-semibold text-xs text-[#0F0F0F] hover:scale-[1.02] transition-transform"
                   >
                     Continue to Questions
-                  </button>
+                  </EvasiveButton>
                 </div>
               </motion.div>
             )}

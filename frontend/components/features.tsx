@@ -10,6 +10,8 @@ const features = [
     borderColor: '#C8F135',
     iconBg: 'rgba(200, 241, 53, 0.1)',
     iconColor: '#9AC020',
+    textColor: '#0F0F0F',
+    mutedTextColor: 'rgba(15, 15, 15, 0.72)',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -22,6 +24,8 @@ const features = [
     borderColor: '#0057FF',
     iconBg: 'rgba(0, 87, 255, 0.1)',
     iconColor: '#0057FF',
+    textColor: '#FFFFFF',
+    mutedTextColor: 'rgba(255, 255, 255, 0.78)',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -34,6 +38,8 @@ const features = [
     borderColor: '#FF4D2E',
     iconBg: 'rgba(255, 77, 46, 0.1)',
     iconColor: '#FF4D2E',
+    textColor: '#FFFFFF',
+    mutedTextColor: 'rgba(255, 255, 255, 0.78)',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -46,6 +52,8 @@ const features = [
     borderColor: '#00C896',
     iconBg: 'rgba(0, 200, 150, 0.1)',
     iconColor: '#00C896',
+    textColor: '#0F0F0F',
+    mutedTextColor: 'rgba(15, 15, 15, 0.72)',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -58,6 +66,8 @@ const features = [
     borderColor: '#C8F135',
     iconBg: 'rgba(200, 241, 53, 0.1)',
     iconColor: '#9AC020',
+    textColor: '#0F0F0F',
+    mutedTextColor: 'rgba(15, 15, 15, 0.72)',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -70,6 +80,8 @@ const features = [
     borderColor: '#0057FF',
     iconBg: 'rgba(0, 87, 255, 0.1)',
     iconColor: '#0057FF',
+    textColor: '#FFFFFF',
+    mutedTextColor: 'rgba(255, 255, 255, 0.78)',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -110,19 +122,19 @@ export function Features() {
               initial={{ opacity: 0, y: 32 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.55, delay: 0.1 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-2xl p-6 border border-[rgba(15,15,15,0.06)] shadow-[0_2px_12px_rgba(15,15,15,0.06)] transition-all duration-250 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(15,15,15,0.12)]"
-              style={{ borderTopWidth: '3px', borderTopColor: feature.borderColor }}
+              className="rounded-2xl p-6 border border-[rgba(15,15,15,0.06)] shadow-[0_2px_12px_rgba(15,15,15,0.06)] transition-all duration-250 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(15,15,15,0.12)]"
+              style={{ backgroundColor: feature.borderColor }}
             >
               <div 
                 className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                style={{ backgroundColor: feature.iconBg, color: feature.iconColor }}
+                style={{ backgroundColor: 'rgba(255,255,255,0.28)', color: feature.textColor }}
               >
                 {feature.icon}
               </div>
-              <h3 className="font-display font-bold text-lg text-[#0F0F0F] mb-2">
+              <h3 className="font-display font-bold text-lg mb-2" style={{ color: feature.textColor }}>
                 {feature.title}
               </h3>
-              <p className="font-body text-sm text-[#6B6560] leading-relaxed">
+              <p className="font-body text-sm leading-relaxed" style={{ color: feature.mutedTextColor }}>
                 {feature.description}
               </p>
             </motion.div>
