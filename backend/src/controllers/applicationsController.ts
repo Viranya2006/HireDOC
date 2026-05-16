@@ -5,6 +5,8 @@ import { Application } from "../models/Application";
 import { extractTextFromPDF } from "../services/cvParserService";
 import { evaluateCandidate } from "../services/minimaxService";
 import { saveCv } from "../services/cvStorageService";
+import { sendDecisionEmail } from "../services/emailService";
+import type { RecruiterStatus } from "../models/Application";
 
 export const submitApplication = async (req: Request, res: Response) => {
   const { slug } = req.params;
@@ -104,7 +106,7 @@ export const getApplicationsForJob = async (req: Request, res: Response) => {
 
   const applications = await Application.find({ job_id })
     .select(
-      "_id candidate_name candidate_email score ai_recommendation created_at",
+      "_id candidate_name candidate_email score ai_recommendation recruiter_status created_at",
     )
     .sort({ score: -1 })
     .lean();
@@ -129,4 +131,59 @@ export const getApplicationDetail = async (req: Request, res: Response) => {
     return res.status(404).json({ error: "Application not found" });
 
   res.json({ application });
+};
+
+export const updateApplicationDecision = async (
+  req: Request,
+  res: Response,
+) => {
+  const { job_id, application_id } = req.params;
+  const decision = req.body?.decision as RecruiterStatus | undefined;
+
+  if (decision !== "shortlisted" && decision !== "rejected") {
+    return res.status(400).json({
+      error: 'decision must be "shortlisted" or "rejected"',
+    });
+  }
+
+  const job = await Job.findOne({
+    _id: job_id,
+    recruiter_id: req.recruiter!._id,
+  }).lean();
+  if (!job) return res.status(404).json({ error: "Job not found" });
+
+  const application = await Application.findOne({
+    _id: application_id,
+    job_id: job._id,
+  });
+  if (!application)
+    return res.status(404).json({ error: "Application not found" });
+
+  application.recruiter_status = decision;
+  application.decision_at = new Date();
+
+  try {
+    await sendDecisionEmail(decision, {
+      candidateName: application.candidate_name,
+      candidateEmail: application.candidate_email,
+      jobTitle: job.title,
+      company: job.company,
+      location: job.location,
+      score: application.score,
+      aiSummary: application.ai_summary,
+    });
+    application.decision_email_sent_at = new Date();
+  } catch (err) {
+    console.error("Decision email failed:", err);
+    return res.status(502).json({
+      error:
+        err instanceof Error
+          ? err.message
+          : "Failed to send notification email",
+    });
+  }
+
+  await application.save();
+
+  res.json({ application: application.toObject() });
 };

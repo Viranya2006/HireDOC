@@ -35,8 +35,21 @@ Required in `backend/.env`:
 - `JWT_SECRET` (32+ characters)
 - `FIREBASE_SERVICE_ACCOUNT_JSON` (single-line JSON from Firebase)
 - `MINIMAX_API_KEY` / `MINIMAX_GROUP_ID` (optional, for AI features)
+- `SMTP_USER` / `SMTP_PASS` / `EMAIL_FROM` (optional, for shortlist/rejection emails via Gmail; logs to console if unset)
 
 Verify: `GET http://localhost:5000/health` → `{ "status": "ok" }`
+
+**Gmail SMTP (candidate emails):**
+
+1. Enable 2-Step Verification on your Google account.
+2. Create an [App Password](https://myaccount.google.com/apppasswords) (Mail → Other → “HireDoc”).
+3. Add to `backend/.env`:
+   - `SMTP_USER=your.email@gmail.com`
+   - `SMTP_PASS=` the 16-character app password
+   - `EMAIL_FROM=HireDoc <your.email@gmail.com>`
+4. Restart the backend.
+
+Personal Gmail accounts have a daily send limit (~500 emails). Use a Google App Password, not your normal Gmail password.
 
 ### Frontend (port 3000)
 
@@ -59,4 +72,4 @@ Fill all `NEXT_PUBLIC_FIREBASE_*` keys and `NEXT_PUBLIC_API_URL=http://localhost
 
 1. Sign in → create job → analyze JD → publish
 2. Share `/apply/{slug}` with candidates (PDF resume required)
-3. View applicants on `/dashboard?jobId={id}`
+3. View applicants on `/dashboard?jobId={id}` — use **Shortlist** or **Reject** to email candidates automatically

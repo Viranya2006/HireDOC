@@ -11,6 +11,7 @@ interface HiringBriefPanelProps {
   onClose: () => void;
   onShortlist: () => void;
   onReject: () => void;
+  actionsDisabled?: boolean;
 }
 
 function LargeScoreRing({ score }: { score: number }) {
@@ -61,6 +62,7 @@ export function HiringBriefPanel({
   onClose,
   onShortlist,
   onReject,
+  actionsDisabled = false,
 }: HiringBriefPanelProps) {
   return (
     <motion.div
@@ -198,15 +200,19 @@ export function HiringBriefPanel({
       {/* Actions */}
       <div className="p-5 border-t border-[rgba(15,15,15,0.10)] flex gap-3">
         <button
+          type="button"
           onClick={onShortlist}
-          className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#C8F135] rounded-xl font-body text-[#0F0F0F] text-sm font-semibold hover:bg-[#b8e125] transition-colors"
+          disabled={actionsDisabled}
+          className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#C8F135] rounded-xl font-body text-[#0F0F0F] text-sm font-semibold hover:bg-[#b8e125] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Check className="w-4 h-4" />
           Shortlist
         </button>
         <button
+          type="button"
           onClick={onReject}
-          className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-[#FF4D2E] rounded-xl font-body text-[#FF4D2E] text-sm font-semibold hover:bg-[#FF4D2E]/10 transition-colors"
+          disabled={actionsDisabled}
+          className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-[#FF4D2E] rounded-xl font-body text-[#FF4D2E] text-sm font-semibold hover:bg-[#FF4D2E]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="w-4 h-4" />
           Reject
