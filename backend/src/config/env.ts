@@ -23,10 +23,39 @@ function parseCorsOrigins(raw: string | undefined): string[] {
   return fromEnv.length > 0 ? fromEnv : DEFAULT_CORS_ORIGINS;
 }
 
+/** Atlas + Vercel: prefer mongodb+srv; strip directConnection on *.mongodb.net. */
+export function normalizeMongoUri(uri: string): string {
+  const trimmed = uri.trim();
+  if (!trimmed) return trimmed;
+
+  try {
+    const parsed = new URL(trimmed);
+    const isAtlas = parsed.hostname.includes("mongodb.net");
+
+    if (isAtlas || process.env.VERCEL === "1") {
+      parsed.searchParams.delete("directConnection");
+    }
+
+    if (isAtlas && parsed.protocol === "mongodb:") {
+      console.warn(
+        "MONGODB_URI uses a single mongodb:// shard host. Prefer the mongodb+srv:// connection string from Atlas (Connect → Drivers).",
+      );
+    }
+
+    return parsed.toString();
+  } catch {
+    return trimmed.replace(/[?&]directConnection=true(&|$)/gi, (_, sep) =>
+      sep === "&" ? "&" : "",
+    );
+  }
+}
+
 export const env = {
   port,
   nodeEnv: process.env.NODE_ENV ?? "development",
-  mongodbUri: process.env.MONGODB_URI?.trim() || DEFAULT_MONGODB_URI,
+  mongodbUri: normalizeMongoUri(
+    process.env.MONGODB_URI?.trim() || DEFAULT_MONGODB_URI,
+  ),
   jwtSecret:
     process.env.JWT_SECRET ?? "dev-jwt-secret-min-32-characters-long",
   uploadsDir: path.resolve(
@@ -68,14 +97,15 @@ export function getFirebaseServiceAccount(): Record<string, unknown> | null {
   }
 }
 
-if (
-  env.nodeEnv === "production" &&
-  !env.firebaseServiceAccountJson
-) {
-  console.error(
-    "FIREBASE_SERVICE_ACCOUNT_JSON is required in production",
-  );
-  process.exit(1);
+if (env.nodeEnv === "production" && !env.firebaseServiceAccountJson) {
+  const msg =
+    "FIREBASE_SERVICE_ACCOUNT_JSON is required in production";
+  if (process.env.VERCEL === "1") {
+    console.error(`${msg} (auth routes will fail until set in Vercel env)`);
+  } else {
+    console.error(msg);
+    process.exit(1);
+  }
 }
 
 /** Strip whitespace, quotes, and accidental `Bearer ` prefix from .env values. */
