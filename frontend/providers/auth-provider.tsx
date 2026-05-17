@@ -100,16 +100,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const appToken = getToken();
 
       if (!user) {
-        if (!appToken) {
-          setRecruiter(null);
-          setLoading(false);
-          return;
-        }
+        setRecruiter(null);
         setLoading(false);
         return;
       }
 
-      if (appToken && user.emailVerified) {
+      if (!appToken) {
+        setRecruiter(null);
+        setLoading(false);
+        return;
+      }
+
+      if (user.emailVerified) {
         try {
           const { recruiter: r } = await getMe();
           setRecruiter(r);
@@ -300,9 +302,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     clearToken();
     clearSessionCookie();
+    localStorage.removeItem(PENDING_ORG_KEY);
     setRecruiter(null);
+    setFirebaseUser(null);
     const auth = getFirebaseAuth();
-    if (auth) await firebaseSignOut(auth);
+    if (auth) {
+      try {
+        await firebaseSignOut(auth);
+      } catch {
+        // Local session is already cleared; ignore Firebase errors.
+      }
+    }
   }, []);
 
   return (

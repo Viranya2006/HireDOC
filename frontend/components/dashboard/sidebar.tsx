@@ -34,6 +34,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const searchParams = useSearchParams();
   const { recruiter, signOut } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [signingOut, setSigningOut] = useState(false);
 
   const jobId = searchParams.get("jobId") || jobs[0]?.id || "";
 
@@ -55,9 +56,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push(ROUTES.home);
-    onNavigate?.();
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await signOut();
+      onNavigate?.();
+      router.replace(ROUTES.login);
+      router.refresh();
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   const displayName =
@@ -160,10 +168,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <button
               type="button"
               onClick={handleSignOut}
-              className="font-body text-[#6B6560] text-xs hover:text-[#FF4D2E] transition-colors flex items-center gap-1"
+              disabled={signingOut}
+              className="font-body text-[#6B6560] text-xs hover:text-[#FF4D2E] transition-colors flex items-center gap-1 disabled:opacity-50"
             >
               <LogOut className="w-3 h-3" />
-              Sign Out
+              {signingOut ? "Signing out…" : "Sign Out"}
             </button>
           </div>
         </div>
