@@ -57,7 +57,7 @@ export const env = {
     process.env.MONGODB_URI?.trim() || DEFAULT_MONGODB_URI,
   ),
   jwtSecret:
-    process.env.JWT_SECRET ?? "dev-jwt-secret-min-32-characters-long",
+    process.env.JWT_SECRET ?? "JQb8wT3cZP1kM7nVx2Lr9aH5uE6sY0FdKc4qR8tNw1Gp7mXz",
   uploadsDir: path.resolve(
     process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads"),
   ),
